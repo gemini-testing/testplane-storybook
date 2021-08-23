@@ -1,0 +1,73 @@
+{
+    "name": "hermione-storybook",
+    "version": "0.0.0",
+    "description": "Storybook addon that makes it easy to write hermione tests and speed up their execution time",
+    "main": "build/index.js",
+    "types": "./build/index.d.ts",
+    "files": [
+        "build",
+        "hermione.js",
+        "preset.js"
+    ],
+    "scripts": {
+        "build": "tsc",
+        "build-spec": "tsc --build tsconfig.spec.json",
+        "clean": "rimraf build/ build-spec/ *.tsbuildinfo",
+        "prepack": "npm run clean && npm run build",
+        "test": "npm run lint && npm run unit",
+        "lint": "npm run eslint && npm run style",
+        "reformat": "eslint src --ext .ts --fix && prettier --write 'src/**/*.ts' '**/*.json'",
+        "prettier-watch": "onchange 'src/**/*.ts' '**/*.json' -- prettier --write {{changed}}",
+        "style": "prettier --check 'src/**/*.ts' '**/*.json'",
+        "eslint": "eslint src --ext .ts",
+        "unit": "jest"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/gemini-testing/hermione-storybook.git"
+    },
+    "engines": {
+        "node": ">= 12.0.0"
+    },
+    "keywords": [
+        "storybook-addons",
+        "storybook",
+        "hermione"
+    ],
+    "author": "Dmitriy Dudkevich <dudkevich@yandex-team.ru>",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/gemini-testing/hermione-storybook/issues"
+    },
+    "homepage": "https://github.com/gemini-testing/hermione-storybook#readme",
+    "devDependencies": {
+        "@types/bluebird": "^3.5.36",
+        "@types/jest": "^27.0.1",
+        "@types/jest-when": "^2.7.3",
+        "@types/lodash": "^4.14.172",
+        "@types/node": "^12.20.19",
+        "@typescript-eslint/eslint-plugin": "^4.29.3",
+        "@typescript-eslint/parser": "^4.29.3",
+        "bluebird": "^3.7.2",
+        "eslint": "^7.32.0",
+        "eslint-config-gemini-testing": "^3.0.0",
+        "hermione": "^4.4.0",
+        "jest": "^27.0.6",
+        "jest-extended": "^0.11.5",
+        "jest-when": "^3.3.1",
+        "onchange": "^7.1.0",
+        "prettier": "^2.3.2",
+        "rimraf": "^3.0.2",
+        "ts-jest": "^27.0.4",
+        "typescript": "^4.3.5"
+    },
+    "dependencies": {
+        "@storybook/addons": "^6.3.6",
+        "@storybook/core-events": "^6.3.6",
+        "gemini-configparser": "^1.1.0",
+        "lodash": "^4.17.21"
+    },
+    "peerDependencies": {
+        "hermione": "^4.2.2"
+    }
+}
