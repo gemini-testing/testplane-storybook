@@ -1,6 +1,6 @@
 {
     "name": "hermione-storybook",
-    "version": "0.0.0",
+    "version": "0.1.0",
     "description": "Storybook addon that makes it easy to write hermione tests and speed up their execution time",
     "main": "build/index.js",
     "types": "./build/index.d.ts",
