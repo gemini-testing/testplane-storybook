@@ -13,10 +13,7 @@ describe("hermione-plugin/selectStory", () => {
     let urlMock: jest.Mock<Promise<void>, [string]>;
     let getUrlMock: jest.Mock<Promise<string>, []>;
     let setMetaMock: jest.Mock<Promise<void>, [string, unknown]>;
-    let executeMock: jest.Mock<
-        Promise<SelectStoryStorybook | void | undefined>,
-        [script: (...args: unknown[]) => unknown, ...args: unknown[]]
-    >;
+    let executeMock: jest.Mock<Promise<unknown | void>, [script: (...args: unknown[]) => unknown, ...args: unknown[]]>;
     let executeAsyncMock: jest.Mock<Promise<void>, [script: (...args: unknown[]) => unknown, ...args: unknown[]]>;
     let executeAsyncCb: jest.SpyInstance;
     let waitUntilMock: jest.Mock<Promise<void>>;
@@ -87,7 +84,7 @@ describe("hermione-plugin/selectStory", () => {
 
     describe("'selectStory' is called on storybook page without hermione-addon", () => {
         beforeEach(() => {
-            executeMock.mockResolvedValue(undefined);
+            executeMock.mockResolvedValue(false);
         });
 
         test(`should throw if current page is matched to storybook url with "${STORYBOOK_PREVIEW}"`, async () => {
@@ -102,7 +99,7 @@ describe("hermione-plugin/selectStory", () => {
 
     describe("'selectStory' is called on not storybook page", () => {
         beforeEach(() => {
-            executeMock.mockResolvedValue(undefined);
+            executeMock.mockResolvedValue(false);
         });
 
         test("should try to get current url", async () => {
@@ -153,6 +150,29 @@ describe("hermione-plugin/selectStory", () => {
         });
     });
 
+    describe("'selectStory' is called in native browser app", () => {
+        test("should handle error on call 'execute' before open url", async () => {
+            executeMock.mockImplementation(() => {
+                throw new Error("Method is not implemented");
+            });
+            const selectStoryCmd = createSelectStory("/storybook/url");
+
+            await expect(selectStoryCmd.call(browser, "story-id")).toResolve();
+            expect(executeMock).toHaveBeenCalledBefore(urlMock);
+        });
+
+        test("should handle error on call 'getUrl' before open url", async () => {
+            executeMock.mockResolvedValueOnce(false);
+            getUrlMock.mockImplementationOnce(() => {
+                throw new Error("Method is not implemented");
+            });
+            const selectStoryCmd = createSelectStory("/storybook/url");
+
+            await expect(selectStoryCmd.call(browser, "story-id")).toResolve();
+            expect(getUrlMock).toHaveBeenCalledBefore(urlMock);
+        });
+    });
+
     describe("'executeAsync' throws", () => {
         it("should not handle error if 'executeAsync' is supported in the browser", async () => {
             executeAsyncMock.mockImplementation(() => {
@@ -171,11 +191,9 @@ describe("hermione-plugin/selectStory", () => {
                     throw new Error("Method has not yet been implemented");
                 });
 
-                executeMock
-                    .mockResolvedValueOnce(window.__HERMIONE_SELECT_STORY__)
-                    .mockImplementation((_, storyId, args = {}) => {
-                        return executeMock.mock.calls[1][0](storyId, args) as Promise<void>;
-                    });
+                executeMock.mockResolvedValueOnce(true).mockImplementation((_, storyId, args = {}) => {
+                    return executeMock.mock.calls[1][0](storyId, args) as Promise<void>;
+                });
 
                 (window.__HERMIONE_SELECT_STORY__ as jest.Mock).mockImplementation((...args) => {
                     return P.delay(10).then(args[args.length - 1]());

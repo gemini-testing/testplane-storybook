@@ -1,6 +1,5 @@
-import { STORYBOOK_PREVIEW } from "../constants";
+import { STORYBOOK_PREVIEW, RE_METHOD_NOT_IMPLEMENTED } from "../constants";
 import type { Args } from "@storybook/addons";
-import type { SelectStoryStorybook } from "../../types";
 
 type SelectStoryFunction = (storyId: string, args?: Args) => Promise<void>;
 declare global {
@@ -11,12 +10,29 @@ declare global {
 
 export function createSelectStory(storybookUrl: string): SelectStoryFunction {
     return async function (this: WebdriverIO.Browser, storyId: string, args: Args = {}): Promise<void> {
-        const isStorybookApiInited = await this.execute<SelectStoryStorybook | undefined, []>(function () {
-            return window.__HERMIONE_SELECT_STORY__;
-        });
+        let isStorybookApiInited = false;
+
+        try {
+            isStorybookApiInited = await this.execute<boolean, []>(function () {
+                return Boolean(window.__HERMIONE_SELECT_STORY__);
+            });
+        } catch (err) {
+            if (!RE_METHOD_NOT_IMPLEMENTED.test(err.message)) {
+                throw err;
+            }
+        }
 
         if (!isStorybookApiInited) {
-            const currUrl = await this.getUrl();
+            let currUrl = "";
+
+            try {
+                currUrl = await this.getUrl();
+            } catch (err) {
+                if (!RE_METHOD_NOT_IMPLEMENTED.test(err.message)) {
+                    throw err;
+                }
+            }
+
             const storybookIframeUrl = storybookUrl.includes(STORYBOOK_PREVIEW)
                 ? storybookUrl
                 : `${storybookUrl.replace(/\/$/, "")}/${STORYBOOK_PREVIEW}`;
@@ -37,7 +53,7 @@ export function createSelectStory(storybookUrl: string): SelectStoryFunction {
                 args,
             );
         } catch (err) {
-            if (!/Method has not yet been implemented/.test(err.message)) {
+            if (!RE_METHOD_NOT_IMPLEMENTED.test(err.message)) {
                 throw err;
             }
 
