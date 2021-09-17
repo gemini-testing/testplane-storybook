@@ -12,6 +12,10 @@ export type StoryRenderError = {
     description: string;
 };
 
+export interface FontFaceSet {
+    ready: Promise<FontFaceSet>;
+}
+
 declare global {
     // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace WebdriverIO {

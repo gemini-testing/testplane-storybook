@@ -5,11 +5,15 @@ import EnhancedPromise from "../utils/enhanced-promise";
 import { PARAMETER_NAME, NON_EXISTENT_STORY_ID } from "../constants";
 
 import type { MakeDecoratorResult, Channel, Args } from "@storybook/addons";
-import type { SelectStoryStorybook, StoryRenderError } from "../../types";
+import type { SelectStoryStorybook, StoryRenderError, FontFaceSet } from "../../types";
 
 declare global {
     interface Window {
         __HERMIONE_SELECT_STORY__: SelectStoryStorybook;
+    }
+
+    interface Document {
+        fonts: FontFaceSet;
     }
 }
 
@@ -52,6 +56,8 @@ export default class HermioneDecorator {
             if (!isUndefined(args) && !isEmpty(args)) {
                 await this.updateStoryArgs(storyId, args);
             }
+
+            await this.waitForFontsLoaded();
 
             callback && callback();
         } finally {
@@ -106,5 +112,13 @@ export default class HermioneDecorator {
         return err => {
             promise.reject(err);
         };
+    }
+
+    private waitForFontsLoaded(): Promise<FontFaceSet> | void {
+        if (!document.fonts) {
+            return;
+        }
+
+        return document.fonts.ready;
     }
 }

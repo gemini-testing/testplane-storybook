@@ -155,6 +155,18 @@ describe("hermione-addon/hermione-decorator", () => {
                 updatedArgs: storyArgs,
             });
         });
+
+        test("should wait until all fonts loaded", async () => {
+            const mediator = jest.fn();
+            document.fonts = {
+                ready: P.delay(100).then(mediator),
+            };
+            P.delay(10).then(() => channel.emit(Events.STORY_RENDERED));
+
+            await hermioneDecorator.selectStory("story-id");
+
+            expect(mediator).toHaveBeenCalled();
+        });
     });
 
     test("should call 'selectStory' method on call addon api", () => {
