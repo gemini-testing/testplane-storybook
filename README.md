@@ -113,6 +113,6 @@ After that your story with id `example-button--primary` will be rendered on prev
 * To convert old url queries `selectedKind` and `selectedStory` (users of storybook@5) to story id you can use the following helper:
 
 ```js
-import { toId } from '@storybook/csf';
-const storyId = toId(selectedKind, selectedStory);
+import { toId, storyNameFromExport } from '@storybook/csf';
+const storyId = toId(selectedKind, storyNameFromExport(selectedStory));
 ```
