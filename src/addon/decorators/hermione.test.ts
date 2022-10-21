@@ -124,10 +124,11 @@ describe("hermione-addon/hermione-decorator", () => {
             });
         });
 
-        test("should reset story which is already rendered", async () => {
+        test("should reset story and its args if story is already rendered", async () => {
             P.delay(10)
                 .then(() => channel.emit(Events.STORY_RENDERED))
                 .then(() => P.delay(10).then(() => channel.emit(Events.STORY_MISSING)))
+                .then(() => P.delay(10).then(() => channel.emit(Events.STORY_ARGS_UPDATED)))
                 .then(() => P.delay(10).then(() => channel.emit(Events.STORY_RENDERED)));
 
             await hermioneDecorator.selectStory("story-id");
@@ -135,6 +136,9 @@ describe("hermione-addon/hermione-decorator", () => {
 
             expect(channel.once).toHaveBeenCalledWith(Events.STORY_MISSING, expect.any(Function));
             expect(channel.emit).toHaveBeenCalledWith(Events.SET_CURRENT_STORY, { storyId: NON_EXISTENT_STORY_ID });
+
+            expect(channel.once).toHaveBeenCalledWith(Events.STORY_ARGS_UPDATED, expect.any(Function));
+            expect(channel.emit).toHaveBeenCalledWith(Events.RESET_STORY_ARGS, { storyId: "story-id" });
         });
 
         test("should update story args", async () => {

@@ -44,6 +44,7 @@ export default class HermioneDecorator {
         try {
             if (this.currentStoryId === storyId) {
                 await this.resetStory();
+                await this.resetStoryArgs(storyId);
             } else {
                 this.currentStoryId = storyId;
             }
@@ -73,6 +74,13 @@ export default class HermioneDecorator {
         return new Promise(resolve => {
             this.channel.once(Events.STORY_MISSING, resolve);
             this.channel.emit(Events.SET_CURRENT_STORY, { storyId: NON_EXISTENT_STORY_ID });
+        });
+    }
+
+    private resetStoryArgs(storyId: string): Promise<void> {
+        return new Promise(resolve => {
+            this.channel.once(Events.STORY_ARGS_UPDATED, resolve);
+            this.channel.emit(Events.RESET_STORY_ARGS, { storyId });
         });
     }
 
