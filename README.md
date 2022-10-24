@@ -49,19 +49,21 @@ configure(...);
 ```js
 // .hermione.conf.js
 module.exports = {
-    // ...
-    system: {
-        plugins: {
-            'hermione-storybook/plugin': {
-                enabled: true,
-                storybookUrl: 'http://localhost:6006'
-            }
-        }
-    }
+    plugins: {
+        'hermione-storybook/plugin': {
+            enabled: true,
+            storybookUrl: 'http://localhost:6006'
+        },
+
+        // other hermione plugins...
+    },
+
+    // other hermione settings...
 }
 ```
 
 * Write hermione-test using `selectStory` command from plugin:
+
 ```js
 describe('button', () => {
     it('primary', async function() {
@@ -80,6 +82,7 @@ describe('button', () => {
 * **storybookUrl** (required) `String` - url to your storybook server (example - `http://localhost:6006`). Moreover it can be specified as a relative url for [baseUrl](https://github.com/gemini-testing/hermione#baseurl) option in hermione. By default url is `http://localhost:6006`;
 
 Also there is ability to override plugin parameters by CLI options or environment variables (see [configparser](https://github.com/gemini-testing/configparser)).
+
 Use `hermione_storybook_` prefix for the environment variables and `--storybook-` for the cli options.
 
 ### API
@@ -91,11 +94,13 @@ Plugin adds the following commands to the `hermione`:
 Examples:
 
 * open passed story:
+
 ```js
 await this.browser.selectStory('example-button--primary');
 ```
 
 * open passed story and change `label` and `size` args (changing args works only for storybook@6 and higher):
+
 ```js
 await this.browser.selectStory('example-button--primary', {label: 'Some label', size: 'large'});
 ```
