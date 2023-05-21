@@ -120,6 +120,15 @@ describe("hermione-plugin/selectStory", () => {
             expect(urlMock).toHaveBeenCalledAfter(getUrlMock);
         });
 
+        test("should reopen page if sessionStore has shouldReinit flag", async () => {
+            const selectStoryCmd = createSelectStory("/storybook/url", { shouldReinit: true });
+            getUrlMock.mockResolvedValueOnce(`/storybook/url/${STORYBOOK_PREVIEW}`);
+
+            await selectStoryCmd.call(browser, "story-id");
+
+            expect(urlMock).toHaveBeenLastCalledWith(`/storybook/url/${STORYBOOK_PREVIEW}`);
+        });
+
         test(`should correctly open storybook url which contains "${STORYBOOK_PREVIEW}"`, async () => {
             const selectStoryCmd = createSelectStory(`/storybook/url/${STORYBOOK_PREVIEW}`);
 

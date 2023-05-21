@@ -55,7 +55,7 @@ describe("hermione-plugin/index", () => {
             test("should add 'selectStory' command to the browser", () => {
                 const storybookUrl = "/relative/url";
                 const selectStoryCmd = jest.fn();
-                when(createSelectStory).calledWith(storybookUrl).mockReturnValue(selectStoryCmd);
+                when(createSelectStory).calledWith(storybookUrl, {}).mockReturnValue(selectStoryCmd);
 
                 plugin(hermione, getPluginConfigMock({ enabled: true, storybookUrl }));
                 hermione.emit(hermione.events.NEW_BROWSER, browser);
