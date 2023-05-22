@@ -7,8 +7,11 @@ declare global {
         __HERMIONE_IS_STORY_RENDERED__: boolean;
     }
 }
+interface SessionStore {
+    shouldReinit?: boolean;
+}
 
-export function createSelectStory(storybookUrl: string): SelectStoryFunction {
+export function createSelectStory(storybookUrl: string, sessionStore: SessionStore = {}): SelectStoryFunction {
     return async function (this: WebdriverIO.Browser, storyId: string, args: Args = {}): Promise<void> {
         let isStorybookApiInited = false;
 
@@ -22,7 +25,7 @@ export function createSelectStory(storybookUrl: string): SelectStoryFunction {
             }
         }
 
-        if (!isStorybookApiInited) {
+        if (!isStorybookApiInited || sessionStore.shouldReinit) {
             let currUrl = "";
 
             try {
@@ -37,10 +40,16 @@ export function createSelectStory(storybookUrl: string): SelectStoryFunction {
                 ? storybookUrl
                 : `${storybookUrl.replace(/\/$/, "")}/${STORYBOOK_PREVIEW}`;
 
-            if (currUrl.includes(storybookIframeUrl)) {
+            if (!sessionStore.shouldReinit && currUrl.includes(storybookIframeUrl)) {
                 throw new Error("Hermione addon is not connected to storybook config");
             } else {
-                await this.url(storybookIframeUrl);
+                sessionStore.shouldReinit = false;
+
+                await this.url(storybookIframeUrl).catch(err => {
+                    sessionStore.shouldReinit = true;
+
+                    throw err;
+                });
             }
         }
 

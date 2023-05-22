@@ -11,6 +11,8 @@ export = (hermione: Hermione, options: PluginPartialConfig): void => {
     }
 
     hermione.on(hermione.events.NEW_BROWSER, browser => {
-        browser.addCommand("selectStory", createSelectStory(storybookUrl));
+        const sessionStore = {};
+
+        browser.addCommand("selectStory", createSelectStory(storybookUrl, sessionStore));
     });
 };
