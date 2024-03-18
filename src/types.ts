@@ -1,26 +1,31 @@
-import type { Args } from "@storybook/addons";
+import type { AssertViewOpts } from "hermione";
 
-export type SelectStoryHermione = (storyId: string, args?: Args) => Promise<void>;
-export type SelectStoryStorybook = (
-    storyId: string,
-    args?: Args,
-    callback?: (result?: unknown) => void,
-) => Promise<void>;
+export type TestFunctionExtendedCtx = TestFunctionCtx & { expect: ExpectWebdriverIO.Expect };
 
-export type StoryRenderError = {
-    title: string;
-    description: string;
-};
+export type HermioneTestFunction = (
+    this: TestFunctionExtendedCtx,
+    ctx: TestFunctionExtendedCtx,
+) => void | Promise<void>;
 
-export interface FontFaceSet {
-    ready: Promise<FontFaceSet>;
+interface StorybookMetaConfig {
+    component?: unknown;
 }
 
-declare global {
-    // eslint-disable-next-line @typescript-eslint/no-namespace
-    namespace WebdriverIO {
-        interface Browser {
-            selectStory: SelectStoryHermione;
-        }
-    }
+interface CustomField<K> {
+    hermione?: K;
 }
+
+type Combined<N, B = void> = B extends void ? N : N & B;
+
+export type HermioneMetaConfig<T = void> = Combined<
+    CustomField<{
+        skip?: boolean;
+        assertViewOpts?: AssertViewOpts;
+        browserIds?: Array<string | RegExp>;
+    }>,
+    T
+>;
+
+export type HermioneStoryConfig<T = void> = Combined<CustomField<Record<string, HermioneTestFunction>>, T>;
+
+export type WithHermione<T = void> = T extends StorybookMetaConfig ? HermioneMetaConfig<T> : HermioneStoryConfig<T>;

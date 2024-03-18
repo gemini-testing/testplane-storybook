@@ -1,6 +1,8 @@
 # hermione-storybook
 
-A [storybook](https://github.com/storybookjs/storybook) addon that makes it easy to write hermione tests on storybook component and speeds up their execution time.
+A hermione plugin that makes it easy to write [hermione](https://github.com/gemini-testing/hermione) tests on [storybook](https://github.com/storybookjs/storybook) components:
+- Adds automatic screenshot tests for storybook stories;
+- Adds an ability to write hermione tests for storybook stories right inside of the stories.
 
 ## Installation
 
@@ -10,50 +12,34 @@ npm install hermione-storybook --save-dev
 
 ## Usage
 
-hermione-storybook is not only a storybook addon, but also it is a plugin for hermione which adds `selectStory` command to open story via storybook API.
+> ⚠️ Storybook 6.4+ and hermione 8.4+ are required to use this plugin.
 
 ### Storybook
 
-If you use storybook@6 and higher:
+If you use storybook@6, you will need to enable [buildStoriesJson](https://storybook.js.org/docs/6.4/configure/overview#feature-flags) feature in your `storybook` config:
 
-* Add `hermione-storybook` addon into your `storybook` config:
-
-```js
+```ts
 // .storybook/main.js
-module.exports = {
+export default {
     // ...
-    addons: [
+    features: {
         // ...
-        'hermione-storybook'
-    ]
+        buildStoriesJson: true
+    }
 }
 ```
 
-If you use storybook@5:
-
-* Add `hermione-storybook` decorator to your `.storybook/config.js` file:
-
-```js
-// .storybook/config.js
-import { addDecorator, configure } from '@storybook/react';
-import { withHermione } from 'hermione-storybook';
-
-addDecorator(withHermione());
-
-configure(...);
-```
+You don't need to do this with storybook@7 or storybook@8.
 
 ### Hermione
 
-* Add `hermione-storybook` plugin into your `hermione` config:
-```js
-// .hermione.conf.js
-module.exports = {
+Add `hermione-storybook` plugin into your `hermione` config:
+
+```ts
+// .hermione.conf.ts
+export default {
     plugins: {
-        'hermione-storybook/plugin': {
-            enabled: true,
-            storybookUrl: 'http://localhost:6006'
-        },
+        'hermione-storybook': {},
 
         // other hermione plugins...
     },
@@ -62,62 +48,89 @@ module.exports = {
 }
 ```
 
-* Write hermione-test using `selectStory` command from plugin:
+With this minimal config, you will be able to run `npx hermione --storybook` to autotest each storybook story with [hermione assertView](https://github.com/gemini-testing/hermione#assertview) command. Hermione will open each story, wait for play function to finish (if defined), and then call `assertView` command. These tests would be generated in runtime.
 
-```js
-describe('button', () => {
-    it('primary', async function() {
-        await this.browser.selectStory('example-button--primary', {label: 'New button label'}); // second parameter with `args` works only for storybook@6 and higher
+Full plugin config:
 
-        await this.browser.assertView('plain', 'body');
-    });
-});
+| **Parameter**      | **Type**                | **Default&nbsp;value** | **Description**                                                             |
+| ------------------ | ----------------------- | ---------------------- | --------------------------------------------------------------------------- |
+| enabled	         | Boolean                 | true                   | Enable / disable the plugin                                                                      |
+| storybookConfigDir | String                  | ".storybook"           | Path to the storybook configuration directory                                                                   |
+| autoScreenshots	 | Boolean                 | true                   | Enable / disable auto-screenshot tests                                                                       |
+| localport	         | Number                  | 6006                   | Port to launch storybook dev server on                                                                          |
+| remoteStorybookUrl | String                  | ""                     | URL of the remote Storybook. If specified, local storybook dev sever would not be launched                             |
+| browserIds         | Array<String \| RegExp> | []                     | Array of `browserId` to run storybook tests on. By default, all of browsers, specified in hermione config would be used |
+
+> ⚠️ *Storybook tests performance greatly depends on [hermione testsPerSession](https://github.com/gemini-testing/hermione#testspersession) parameter, as these tests speeds up on reusing existing sessions, so setting values around 20+ is preferred*
+
+> ⚠️ *These tests ignore [hermione isolation](https://github.com/gemini-testing/hermione#isolation). It would be turned off unconditionally*
+
+## Advanced usage
+
+If you have `ts-node` in your project, you can write your hermione tests right inside of storybook story files:
+
+```ts
+import type { StoryObj } from "@storybook/react";
+import type { WithHermione } from "hermione-storybook"
+
+export const Primary: WithHermione<StoryObj> = {
+    args: {
+        primary: true,
+        label: "Button",
+    },
+    hermione: {
+        "my test": async ({browser, expect}) => {
+            const element = await browser.$(".storybook-button");
+
+            await expect(element).toHaveText("Button");
+        }
+    }
+};
 ```
 
-## Hermione
+You can also specify extra options in story default config:
 
-### Configuration
+```ts
+import type { WithHermione } from "hermione-storybook"
+import type { Meta, StoryObj } from "@storybook/react";
 
-* **enabled** (optional) `Boolean` – enable/disable the plugin. By default plugin is enabled;
-* **storybookUrl** (required) `String` - url to your storybook server (example - `http://localhost:6006`). Moreover it can be specified as a relative url for [baseUrl](https://github.com/gemini-testing/hermione#baseurl) option in hermione. By default url is `http://localhost:6006`;
+const meta: WithHermione<Meta<typeof Button>> = {
+    title: "Example/Button",
+    component: Button,
+    hermione: {
+        skip: false, // if true, skips all hermione tests from this story file
+        browserIds: ["chrome"], // hermione browsers to run tests from this story file
+        assertViewOpts: { // override default assertView options for tests from this file
+            ignoreDiffPixelCount: 5
+        }
+    }
+};
 
-Also there is ability to override plugin parameters by CLI options or environment variables (see [configparser](https://github.com/gemini-testing/configparser)).
-
-Use `hermione_storybook_` prefix for the environment variables and `--storybook-` for the cli options.
-
-### API
-
-Plugin adds the following commands to the `hermione`:
-
-* selectStory - command to open passed story via storybook API. Moreover it can also take arguments which should be updated for the story.
-
-Examples:
-
-* open passed story:
-
-```js
-await this.browser.selectStory('example-button--primary');
+export default meta;
 ```
 
-* open passed story and change `label` and `size` args (changing args works only for storybook@6 and higher):
+If you decide to create separate config for storybook auto-tests (which is suggested), you need to specify config path via CLI option. For example:
 
-```js
-await this.browser.selectStory('example-button--primary', {label: 'Some label', size: 'large'});
+```bash
+npx hermione --storybook -c .hermione.storybook.conf.ts
 ```
 
-## Tips & Tricks
+This allows you to store references next to your story files:
 
-* To check that the `hermione-storybook` addon is connected to your storybook project correctly, you need to open the preview iframe (for example - http://localhost:6006/iframe.html) and call `window.__HERMIONE_SELECT_STORY__` method like that:
+```ts
+// .hermione.conf.ts
+import path from "path";
+import { getStoryFile } from "hermione-storybook";
 
-```js
-window.__HERMIONE_SELECT_STORY__('example-button--primary', {label: 'Some label'});
+export default {
+    screenshotsDir: (test) => {
+        const relativeStoryFilePath = getStoryFile(test);
+        const relativeStoryFileDirPath = path.dirname(relativeStoryFilePath);
+
+        return path.join(relativeStoryFileDirPath, "screens", test.id, test.browserId);
+    },
+    // other hermione settings...
+}
 ```
 
-After that your story with id `example-button--primary` will be rendered on preview iframe. It means that everything works fine.
-
-* To convert old url queries `selectedKind` and `selectedStory` (users of storybook@5) to story id you can use the following helper:
-
-```js
-import { toId, storyNameFromExport } from '@storybook/csf';
-const storyId = toId(selectedKind, storyNameFromExport(selectedStory));
-```
+In this example, screenshot references would be stored in `screens/<testId>/<browserId>` folder, next to each of your story files.
