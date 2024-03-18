@@ -66,6 +66,7 @@
         "npm-which": "^3.0.1"
     },
     "peerDependencies": {
-        "hermione": ">=8.0.0"
+        "hermione": ">=8.4.0",
+        "storybook": "^6.4.0 || ^7.0.0 || ^8.0.0"
     }
 }
