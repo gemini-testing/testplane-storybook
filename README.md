@@ -69,6 +69,8 @@ Full plugin config:
 
 If you have `ts-node` in your project, you can write your hermione tests right inside of storybook story files:
 
+> ⚠️ *Storybook story files must have `.js` or `.ts` extension for this to work*
+
 ```ts
 import type { StoryObj } from "@storybook/react";
 import type { WithHermione } from "hermione-storybook"

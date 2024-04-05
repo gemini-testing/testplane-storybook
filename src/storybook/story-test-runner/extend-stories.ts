@@ -12,8 +12,29 @@ type StoryFile = { default: HermioneMetaConfig } & Record<string, HermioneStoryC
 
 export function extendStoriesFromStoryFile(stories: StorybookStory[]): StorybookStoryExtended[] {
     const storiesMap = getStoriesMap(stories);
-    const storyFile = getStoryFile(stories[0].absolutePath);
+    const storyPath = stories[0].absolutePath;
+    const storyFile = getStoryFile(storyPath);
     const withStoryFileExtendedStories = stories as StorybookStoryExtended[];
+
+    if (!storyFile) {
+        if (storyPath.endsWith(".tsx")) {
+            const msg = [
+                "[hermione-storybook]:",
+                "reading .tsx story files is not supported.",
+                `"hermione" section is ignored in "${storyPath}"`,
+            ].join(" ");
+
+            console.warn(msg);
+        }
+
+        return withStoryFileExtendedStories.map(story => {
+            story.skip = false;
+            story.assertViewOpts = {};
+            story.browserIds = null;
+
+            return story;
+        });
+    }
 
     for (const storyName in storyFile) {
         if (storyName === "default") {
@@ -58,13 +79,20 @@ function getStoryNameId(storyName: string): string {
     return storyName.replace(nonAsciiWordRegExp, "").toLowerCase();
 }
 
-function getStoryFile(storyPath: string): StoryFile {
+function getStoryFile(storyPath: string): StoryFile | null {
     const unmockFn = mockLoaders();
-    const storyFile = require(storyPath); // eslint-disable-line @typescript-eslint/no-var-requires
+
+    let storyFile;
+
+    try {
+        storyFile = require(storyPath); // eslint-disable-line @typescript-eslint/no-var-requires
+    } catch (_) {} // eslint-disable-line no-empty
+
+    const isStoryFileFailedToLoad = !storyFile || typeof storyFile === "function";
 
     unmockFn();
 
-    return storyFile;
+    return isStoryFileFailedToLoad ? null : storyFile;
 }
 
 function mockLoaders(): () => void {
@@ -93,14 +121,14 @@ function mockFailedModule(extension: string): () => void {
             get: getMockedModuleProxy,
             apply: getMockedModuleProxy,
             construct: getMockedModuleProxy,
-            getOwnPropertyDescriptor: getMockedModuleProxy,
+            getOwnPropertyDescriptor: Reflect.getOwnPropertyDescriptor,
             getPrototypeOf: getMockedModuleProxy,
             setPrototypeOf: getMockedModuleProxy,
             set: (_, __, val) => val,
             defineProperty: () => true,
             deleteProperty: () => true,
             preventExtensions: () => true,
-            ownKeys: () => [],
+            ownKeys: Reflect.ownKeys,
             isExtensible: () => false,
             has: () => false,
         });
