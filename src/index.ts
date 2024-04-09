@@ -45,13 +45,13 @@ function onTestplaneWorker(testplane: Testplane): void {
             };
         };
 
-        browser.overwriteCommand(commandName, (baseAssertView, name, selector, opts = {}, ...rest) => {
+        browser.overwriteCommand(commandName, (baseAssertView, name, selector, opts = {}, ...rest: []) => {
             return baseAssertView(name, selector, withStoryDefaults(opts), ...rest);
         });
 
         browser.overwriteCommand(
             commandName,
-            (baseAssertView, name, opts = {}, ...rest) => {
+            (baseAssertView, name, opts = {}, ...rest: []) => {
                 return baseAssertView(name, withStoryDefaults(opts), ...rest);
             },
             true,
