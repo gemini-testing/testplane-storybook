@@ -1,8 +1,8 @@
 import { extendStoriesFromStoryFile } from "./extend-stories";
 import { nestedDescribe, extendedIt } from "./test-decorators";
 import { openStory } from "./open-story";
-import type { StoryLoadResult } from "./open-story/hermione-open-story";
-import type { HermioneOpts } from "../story-to-test";
+import type { StoryLoadResult } from "./open-story/testplane-open-story";
+import type { TestplaneOpts } from "../story-to-test";
 import type { TestFunctionExtendedCtx } from "../../types";
 import type { StorybookStoryExtended, StorybookStory } from "./types";
 
@@ -10,13 +10,13 @@ export function getAbsoluteFilePath(): string {
     return __filename;
 }
 
-export function run(stories: StorybookStory[], opts: HermioneOpts): void {
+export function run(stories: StorybookStory[], opts: TestplaneOpts): void {
     const withStoryFileDataStories = extendStoriesFromStoryFile(stories);
 
-    withStoryFileDataStories.forEach(story => createHermioneTests(story, opts));
+    withStoryFileDataStories.forEach(story => createTestplaneTests(story, opts));
 }
 
-function createHermioneTests(story: StorybookStoryExtended, { autoScreenshots }: HermioneOpts): void {
+function createTestplaneTests(story: StorybookStoryExtended, { autoScreenshots }: TestplaneOpts): void {
     nestedDescribe(story, () => {
         if (autoScreenshots) {
             extendedIt(story, "Autoscreenshot", async function (ctx: TestFunctionExtendedCtx) {
@@ -46,13 +46,13 @@ function createHermioneTests(story: StorybookStoryExtended, { autoScreenshots }:
 }
 
 async function openStoryStep(browser: WebdriverIO.Browser, story: StorybookStoryExtended): Promise<StoryLoadResult> {
-    return browser.runStep("hermione-storybook: open story", () => openStory(browser, story));
+    return browser.runStep("@testplane/storybook: open story", () => openStory(browser, story));
 }
 
 async function autoScreenshotStep(browser: WebdriverIO.Browser, rootSelector: string): Promise<void> {
-    await browser.runStep("hermione-storybook: autoscreenshot", () => browser.assertView("plain", rootSelector));
+    await browser.runStep("@testplane/storybook: autoscreenshot", () => browser.assertView("plain", rootSelector));
 }
 
 async function clearSessionStep(browser: WebdriverIO.Browser): Promise<void> {
-    await browser.runStep("hermione-storybook: clear session", () => browser.clearSession());
+    await browser.runStep("@testplane/storybook: clear session", () => browser.clearSession());
 }

@@ -1,8 +1,8 @@
-import type { AssertViewOpts } from "hermione";
+import type { AssertViewOpts } from "testplane";
 
 export type TestFunctionExtendedCtx = TestFunctionCtx & { expect: ExpectWebdriverIO.Expect };
 
-export type HermioneTestFunction = (
+export type TestplaneTestFunction = (
     this: TestFunctionExtendedCtx,
     ctx: TestFunctionExtendedCtx,
 ) => void | Promise<void>;
@@ -12,12 +12,12 @@ interface StorybookMetaConfig {
 }
 
 interface CustomField<K> {
-    hermione?: K;
+    testplane?: K;
 }
 
 type Combined<N, B = void> = B extends void ? N : N & B;
 
-export type HermioneMetaConfig<T = void> = Combined<
+export type TestplaneMetaConfig<T = void> = Combined<
     CustomField<{
         skip?: boolean;
         assertViewOpts?: AssertViewOpts;
@@ -26,6 +26,6 @@ export type HermioneMetaConfig<T = void> = Combined<
     T
 >;
 
-export type HermioneStoryConfig<T = void> = Combined<CustomField<Record<string, HermioneTestFunction>>, T>;
+export type TestplaneStoryConfig<T = void> = Combined<CustomField<Record<string, TestplaneTestFunction>>, T>;
 
-export type WithHermione<T = void> = T extends StorybookMetaConfig ? HermioneMetaConfig<T> : HermioneStoryConfig<T>;
+export type WithTestplane<T = void> = T extends StorybookMetaConfig ? TestplaneMetaConfig<T> : TestplaneStoryConfig<T>;
