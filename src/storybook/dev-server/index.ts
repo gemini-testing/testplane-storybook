@@ -1,6 +1,6 @@
 import { spawn } from "child_process";
 import npmWhich from "npm-which";
-import type Hermione from "hermione";
+import type Testplane from "testplane";
 import type { ChildProcessWithoutNullStreams } from "child_process";
 import logger from "../../logger";
 import { pipeWithPrefix } from "./pipe-with-prefix";
@@ -19,7 +19,7 @@ const getStorybookCliPath = (): string => {
         } catch (_) {
             const errorMessage = [
                 "'storybook' and 'start-storybook' binaries are not found",
-                "Please make sure you are launching hermione tests from project root directory",
+                "Please make sure you are launching Testplane tests from project root directory",
             ].join("\n");
             throw new Error(errorMessage);
         }
@@ -38,7 +38,7 @@ const getStorybookDevServerArgs = (port: number, storybookConfigDir: string): st
 ];
 
 export const getStorybookDevServer = async (
-    hermione: Hermione,
+    testplane: Testplane,
     port: number,
     storybookConfigDir: string,
 ): Promise<ChildProcessWithoutNullStreams> => {
@@ -61,7 +61,7 @@ export const getStorybookDevServer = async (
                 "An error occured while launching storybook dev server",
                 `Dev server failed with code '${code}' (signal: ${signal})`,
             ].join("\n");
-            hermione.halt(new Error(errorMessage), 5000);
+            testplane.halt(new Error(errorMessage), 5000);
         }
     });
 

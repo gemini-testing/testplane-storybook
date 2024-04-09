@@ -19,9 +19,9 @@ describe("storybook/story-test-runner/extend-stories", () => {
         extendStoriesFromStoryFile(stories);
 
         const expectedMsg = [
-            "[hermione-storybook]:",
+            "[@testplane/storybook]:",
             "reading .tsx story files is not supported.",
-            '"hermione" section is ignored in "not/existing.tsx"',
+            '"testplane" section is ignored in "not/existing.tsx"',
         ].join(" ");
         expect(console.warn).toBeCalledWith(expectedMsg);
     });

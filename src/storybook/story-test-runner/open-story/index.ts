@@ -1,7 +1,7 @@
 import { PlayFunctionError } from "../play-function-error";
-import hermioneOpenStory from "./hermione-open-story";
+import testplaneOpenStory from "./testplane-open-story";
 import type { ExecutionContextExtended, StorybookStoryExtended } from "../types";
-import type { StoryLoadResult } from "./hermione-open-story";
+import type { StoryLoadResult } from "./testplane-open-story";
 
 export async function openStory(browser: WebdriverIO.Browser, story: StorybookStoryExtended): Promise<StoryLoadResult> {
     const browserConfig = await browser.getConfig();
@@ -18,13 +18,13 @@ export async function openStory(browser: WebdriverIO.Browser, story: StorybookSt
         const storybookIframeUrl = await getStorybookIframeUrl(browser);
 
         await browser.runStep("open storybook url", () => browser.url(storybookIframeUrl));
-        await browser.runStep("inject script", () => hermioneOpenStory.inject(browser));
+        await browser.runStep("inject script", () => testplaneOpenStory.inject(browser));
     }
 
     await extendBrowserMeta(browser, story);
 
     return browser.runStep("wait story load", async (): Promise<StoryLoadResult> => {
-        const storyLoadResult = await hermioneOpenStory.execute(browser, story.id, shouldRemount);
+        const storyLoadResult = await testplaneOpenStory.execute(browser, story.id, shouldRemount);
 
         if (storyLoadResult.loadError) {
             throw new Error(storyLoadResult.loadError);
@@ -60,7 +60,8 @@ async function extendBrowserMeta(browser: WebdriverIO.Browser, story: StorybookS
     urlObj.searchParams.set("id", story.id);
     urlObj.searchParams.set("path", `/${story.type}/${story.id}`);
 
-    (browser.executionContext as ExecutionContextExtended)["hermione-storybook-assertView-opts"] = story.assertViewOpts;
+    (browser.executionContext as ExecutionContextExtended)["@testplane/storybook-assertView-opts"] =
+        story.assertViewOpts;
 
     await browser.setMeta("url", urlObj.toString().replace("iframe.html", ""));
     await browser.setMeta("storyFile", story.importPath);

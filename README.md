@@ -1,18 +1,18 @@
-# hermione-storybook
+# @testplane/storybook
 
-A hermione plugin that makes it easy to write [hermione](https://github.com/gemini-testing/hermione) tests on [storybook](https://github.com/storybookjs/storybook) components:
+A Testplane plugin that makes it easy to write [Testplane](https://github.com/gemini-testing/testplane) tests on [storybook](https://github.com/storybookjs/storybook) components:
 - Adds automatic screenshot tests for storybook stories;
-- Adds an ability to write hermione tests for storybook stories right inside of the stories.
+- Adds an ability to write Testplane tests for storybook stories right inside of the stories.
 
 ## Installation
 
 ```bash
-npm install hermione-storybook --save-dev
+npm install @testplane/storybook --save-dev
 ```
 
 ## Usage
 
-> ⚠️ Storybook 6.4+ and hermione 8.4+ are required to use this plugin.
+> ⚠️ Storybook 6.4+ is required to use this plugin.
 
 ### Storybook
 
@@ -31,24 +31,24 @@ export default {
 
 You don't need to do this with storybook@7 or storybook@8.
 
-### Hermione
+### Testplane
 
-Add `hermione-storybook` plugin into your `hermione` config:
+Add `@testplane/storybook` plugin into your Testplane config:
 
 ```ts
-// .hermione.conf.ts
+// .testplane.conf.ts
 export default {
     plugins: {
-        'hermione-storybook': {},
+        '@testplane/storybook': {},
 
-        // other hermione plugins...
+        // other Testplane plugins...
     },
 
-    // other hermione settings...
+    // other Testplane settings...
 }
 ```
 
-With this minimal config, you will be able to run `npx hermione --storybook` to autotest each storybook story with [hermione assertView](https://github.com/gemini-testing/hermione#assertview) command. Hermione will open each story, wait for play function to finish (if defined), and then call `assertView` command. These tests would be generated in runtime.
+With this minimal config, you will be able to run `npx testplane --storybook` to autotest each storybook story with [Testplane assertView](https://github.com/gemini-testing/testplane#assertview) command. Testplane will open each story, wait for play function to finish (if defined), and then call `assertView` command. These tests would be generated in runtime.
 
 Full plugin config:
 
@@ -59,28 +59,28 @@ Full plugin config:
 | autoScreenshots	 | Boolean                 | true                   | Enable / disable auto-screenshot tests                                                                       |
 | localport	         | Number                  | 6006                   | Port to launch storybook dev server on                                                                          |
 | remoteStorybookUrl | String                  | ""                     | URL of the remote Storybook. If specified, local storybook dev sever would not be launched                             |
-| browserIds         | Array<String \| RegExp> | []                     | Array of `browserId` to run storybook tests on. By default, all of browsers, specified in hermione config would be used |
+| browserIds         | Array<String \| RegExp> | []                     | Array of `browserId` to run storybook tests on. By default, all of browsers, specified in Testplane config would be used |
 
-> ⚠️ *Storybook tests performance greatly depends on [hermione testsPerSession](https://github.com/gemini-testing/hermione#testspersession) parameter, as these tests speeds up on reusing existing sessions, so setting values around 20+ is preferred*
+> ⚠️ *Storybook tests performance greatly depends on [Testplane testsPerSession](https://github.com/gemini-testing/testplane#testspersession) parameter, as these tests speeds up on reusing existing sessions, so setting values around 20+ is preferred*
 
-> ⚠️ *These tests ignore [hermione isolation](https://github.com/gemini-testing/hermione#isolation). It would be turned off unconditionally*
+> ⚠️ *These tests ignore [Testplane isolation](https://github.com/gemini-testing/testplane#isolation). It would be turned off unconditionally*
 
 ## Advanced usage
 
-If you have `ts-node` in your project, you can write your hermione tests right inside of storybook story files:
+If you have `ts-node` in your project, you can write your Testplane tests right inside of storybook story files:
 
 > ⚠️ *Storybook story files must have `.js` or `.ts` extension for this to work*
 
 ```ts
 import type { StoryObj } from "@storybook/react";
-import type { WithHermione } from "hermione-storybook"
+import type { WithTestplane } from "@testplane/storybook"
 
-export const Primary: WithHermione<StoryObj> = {
+export const Primary: WithTestplane<StoryObj> = {
     args: {
         primary: true,
         label: "Button",
     },
-    hermione: {
+    testplane: {
         "my test": async ({browser, expect}) => {
             const element = await browser.$(".storybook-button");
 
@@ -93,15 +93,15 @@ export const Primary: WithHermione<StoryObj> = {
 You can also specify extra options in story default config:
 
 ```ts
-import type { WithHermione } from "hermione-storybook"
+import type { WithTestplane } from "@testplane/storybook"
 import type { Meta, StoryObj } from "@storybook/react";
 
-const meta: WithHermione<Meta<typeof Button>> = {
+const meta: WithTestplane<Meta<typeof Button>> = {
     title: "Example/Button",
     component: Button,
-    hermione: {
-        skip: false, // if true, skips all hermione tests from this story file
-        browserIds: ["chrome"], // hermione browsers to run tests from this story file
+    testplane: {
+        skip: false, // if true, skips all Testplane tests from this story file
+        browserIds: ["chrome"], // Testplane browsers to run tests from this story file
         assertViewOpts: { // override default assertView options for tests from this file
             ignoreDiffPixelCount: 5
         }
@@ -114,15 +114,15 @@ export default meta;
 If you decide to create separate config for storybook auto-tests (which is suggested), you need to specify config path via CLI option. For example:
 
 ```bash
-npx hermione --storybook -c .hermione.storybook.conf.ts
+npx testplane --storybook -c .testplane.storybook.conf.ts
 ```
 
 This allows you to store references next to your story files:
 
 ```ts
-// .hermione.conf.ts
+// .testplane.conf.ts
 import path from "path";
-import { getStoryFile } from "hermione-storybook";
+import { getStoryFile } from "@testplane/storybook";
 
 export default {
     screenshotsDir: (test) => {
@@ -131,7 +131,7 @@ export default {
 
         return path.join(relativeStoryFileDirPath, "screens", test.id, test.browserId);
     },
-    // other hermione settings...
+    // other Testplane settings...
 }
 ```
 

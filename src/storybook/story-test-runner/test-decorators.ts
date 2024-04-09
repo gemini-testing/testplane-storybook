@@ -20,7 +20,7 @@ export function extendedIt<T extends Partial<TestFunctionExtendedCtx>>(
 ): void {
     const skipableIt = (story.skip ? it.skip : it) as typeof it;
 
-    story.browserIds && hermione.only.in(story.browserIds);
+    story.browserIds && testplane.only.in(story.browserIds);
 
     skipableIt(testName, cb);
 }

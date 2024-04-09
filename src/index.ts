@@ -1,11 +1,11 @@
-import type Hermione from "hermione";
+import type Testplane from "testplane";
 import type { ChildProcessWithoutNullStreams } from "child_process";
 import { parseConfig } from "./config";
 import { STORYBOOK_IFRAME_PATH } from "./constants";
 import { getStorybookPathEndingWith } from "./utils";
 import { getStories } from "./storybook/get-stories";
 import { buildStoryTestFiles } from "./storybook/story-to-test";
-import { patchHermioneBaseUrl, patchHermioneSets, disableHermioneIsolation } from "./utils";
+import { patchTestplaneBaseUrl, patchTestplaneSets, disableTestplaneIsolation } from "./utils";
 import { getStorybookDevServer } from "./storybook/dev-server";
 import type { PluginConfig, PluginPartialConfig } from "./config";
 import type { ExecutionContextExtended } from "./storybook/story-test-runner/types";
@@ -18,29 +18,29 @@ export * from "./types";
 
 export { getStoryFile } from "./storybook/story-to-test";
 
-export default (hermione: Hermione, opts: PluginPartialConfig): void => {
+export default (testplane: Testplane, opts: PluginPartialConfig): void => {
     const config = parseConfig(opts);
 
     if (!config.enabled || !process.argv.includes("--storybook")) {
         return;
     }
 
-    if (hermione.isWorker()) {
-        onHermioneWorker(hermione);
+    if (testplane.isWorker()) {
+        onTestplaneWorker(testplane);
     } else {
-        onHermioneMaster(hermione, config);
+        onTestplaneMaster(testplane, config);
     }
 };
 
-function onHermioneWorker(hermione: Hermione): void {
-    hermione.on(hermione.events.NEW_BROWSER, async browser => {
+function onTestplaneWorker(testplane: Testplane): void {
+    testplane.on(testplane.events.NEW_BROWSER, async browser => {
         const commandName = "assertView";
 
         const withStoryDefaults = (opts = {}): Record<string, unknown> => {
             const executionContext = browser.executionContext as ExecutionContextExtended;
 
             return {
-                ...(executionContext["hermione-storybook-assertView-opts"] || {}),
+                ...(executionContext["@testplane/storybook-assertView-opts"] || {}),
                 ...opts,
             };
         };
@@ -59,18 +59,18 @@ function onHermioneWorker(hermione: Hermione): void {
     });
 }
 
-function onHermioneMaster(hermione: Hermione, config: PluginConfig): void {
+function onTestplaneMaster(testplane: Testplane, config: PluginConfig): void {
     const sharedData: HandlerSharedData = { devServer: null };
 
-    hermione.on(hermione.events.CLI, commander => {
+    testplane.on(testplane.events.CLI, commander => {
         commander.option("--storybook", "run storybook tests");
     });
 
-    hermione.on(hermione.events.INIT, async () => {
+    testplane.on(testplane.events.INIT, async () => {
         const isLocal = !config.remoteStorybookUrl;
 
         if (isLocal) {
-            sharedData.devServer = await getStorybookDevServer(hermione, config.localport, config.storybookConfigDir);
+            sharedData.devServer = await getStorybookDevServer(testplane, config.localport, config.storybookConfigDir);
         }
 
         const storybookUrl = isLocal ? `http://127.0.0.1:${config.localport}` : config.remoteStorybookUrl;
@@ -80,12 +80,12 @@ function onHermioneMaster(hermione: Hermione, config: PluginConfig): void {
 
         const storyTestFiles = await buildStoryTestFiles(stories, { autoScreenshots: config.autoScreenshots });
 
-        patchHermioneBaseUrl(hermione.config, iframeUrl);
-        patchHermioneSets(hermione.config, config.browserIds, storyTestFiles);
-        disableHermioneIsolation(hermione.config, config.browserIds);
+        patchTestplaneBaseUrl(testplane.config, iframeUrl);
+        patchTestplaneSets(testplane.config, config.browserIds, storyTestFiles);
+        disableTestplaneIsolation(testplane.config, config.browserIds);
     });
 
-    hermione.on(hermione.events.AFTER_TESTS_READ, testCollection => {
+    testplane.on(testplane.events.AFTER_TESTS_READ, testCollection => {
         testCollection.eachTest(test => {
             if (test.skipReason === "Skipped by mocha interface") {
                 test.skipReason = "Skipped in storybook file";

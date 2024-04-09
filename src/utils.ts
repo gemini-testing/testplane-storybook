@@ -1,5 +1,5 @@
 import _ from "lodash";
-import type { Config } from "hermione";
+import type { Config } from "testplane";
 import { STORYBOOK_SET_NAME, STORYBOOK_KNOWN_PATH_ENDINGS } from "./constants";
 
 const trimUrlEnding = (urlObj: URL, ending: string): void => {
@@ -38,7 +38,7 @@ export const getStorybookPathEndingWith = (url: string, pathEnding: string): str
     return urlObj.toString();
 };
 
-export const patchHermioneSets = (config: Config, browserIds: Array<string | RegExp>, files: string[]): void => {
+export const patchTestplaneSets = (config: Config, browserIds: Array<string | RegExp>, files: string[]): void => {
     const browsers = getFilteredBrowserIds(config, browserIds);
 
     config.sets = {
@@ -49,7 +49,7 @@ export const patchHermioneSets = (config: Config, browserIds: Array<string | Reg
     };
 };
 
-export const patchHermioneBaseUrl = (config: Config, baseUrl: string): void => {
+export const patchTestplaneBaseUrl = (config: Config, baseUrl: string): void => {
     config.baseUrl = baseUrl;
 
     config.getBrowserIds().forEach(browserId => {
@@ -59,7 +59,7 @@ export const patchHermioneBaseUrl = (config: Config, baseUrl: string): void => {
     });
 };
 
-export const disableHermioneIsolation = (config: Config, browserIds: Array<string | RegExp>): void => {
+export const disableTestplaneIsolation = (config: Config, browserIds: Array<string | RegExp>): void => {
     const browsers = getFilteredBrowserIds(config, browserIds);
 
     config.isolation = false;

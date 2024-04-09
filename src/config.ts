@@ -71,7 +71,7 @@ export function parseConfig(options: PluginPartialConfig): PluginConfig {
             remoteStorybookUrl: stringOption("remoteStorybookUrl", ""),
             browserIds: stringAndRegExpArrayOption("browserIds", []),
         }),
-        { envPrefix: "hermione_storybook_", cliPrefix: "--storybook-" },
+        { envPrefix: "testplane_storybook_", cliPrefix: "--storybook-" },
     );
 
     return parseOptions({ options, env, argv });

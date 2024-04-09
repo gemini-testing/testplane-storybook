@@ -15,13 +15,13 @@ describe("storybook/story-to-test/write-tests-file", () => {
     it("should write test file with correct content", async () => {
         const opts = { autoScreenshots: true };
         const stories = [{ id: "foo" }, { id: "bar" }] as StorybookStoryExtended[];
-        const testFile = "/absolute/test/path/file.hermione.js";
+        const testFile = "/absolute/test/path/file.testplane.js";
         const expectedContents = `
 const stories = [{"id":"foo"},{"id":"bar"}];
 const storyTestRunnerPath = "/absolute/story/runner/path";
-const hermioneOpts = {"autoScreenshots":true};
+const testplaneOpts = {"autoScreenshots":true};
 
-require(storyTestRunnerPath).run(stories, hermioneOpts);
+require(storyTestRunnerPath).run(stories, testplaneOpts);
 `;
         jest.mocked(getStoryRunnerAbsoluteFilePath).mockReturnValue("/absolute/story/runner/path");
 

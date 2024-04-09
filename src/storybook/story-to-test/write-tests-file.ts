@@ -3,22 +3,22 @@ import fs from "fs-extra";
 import { getAbsoluteFilePath as getStoryRunnerAbsoluteFilePath } from "../story-test-runner";
 import { StorybookStoryExtended } from "../get-stories";
 
-export interface HermioneOpts {
+export interface TestplaneOpts {
     autoScreenshots: boolean;
 }
 
 interface TestFileContent {
     storyRunnerPath: string;
     stories: StorybookStoryExtended[];
-    opts: HermioneOpts;
+    opts: TestplaneOpts;
 }
 
-const getHermioneTestFileContent = ({ storyRunnerPath, stories, opts }: TestFileContent): string => `
+const getTestplaneTestFileContent = ({ storyRunnerPath, stories, opts }: TestFileContent): string => `
 const stories = ${JSON.stringify(stories)};
 const storyTestRunnerPath = ${JSON.stringify(storyRunnerPath)};
-const hermioneOpts = ${JSON.stringify(opts)};
+const testplaneOpts = ${JSON.stringify(opts)};
 
-require(storyTestRunnerPath).run(stories, hermioneOpts);
+require(storyTestRunnerPath).run(stories, testplaneOpts);
 `;
 
 export const writeStoryTestsFile = async ({
@@ -28,10 +28,10 @@ export const writeStoryTestsFile = async ({
 }: {
     testFile: string;
     stories: StorybookStoryExtended[];
-    opts: HermioneOpts;
+    opts: TestplaneOpts;
 }): Promise<void> => {
     const storyRunnerPath = getStoryRunnerAbsoluteFilePath();
-    const testFileContent = getHermioneTestFileContent({ storyRunnerPath, stories, opts });
+    const testFileContent = getTestplaneTestFileContent({ storyRunnerPath, stories, opts });
 
     await fs.ensureDir(path.dirname(testFile));
     await fs.writeFile(testFile, testFileContent);

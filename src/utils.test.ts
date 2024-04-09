@@ -1,21 +1,26 @@
-import type { Config } from "hermione";
+import type { Config } from "testplane";
 import _ from "lodash";
 import { STORYBOOK_KNOWN_PATH_ENDINGS, STORYBOOK_SET_NAME } from "./constants";
-import { getStorybookPathEndingWith, patchHermioneSets, disableHermioneIsolation, patchHermioneBaseUrl } from "./utils";
+import {
+    getStorybookPathEndingWith,
+    patchTestplaneSets,
+    disableTestplaneIsolation,
+    patchTestplaneBaseUrl,
+} from "./utils";
 
 describe("utils", () => {
     const getConfig_ = (config: Record<string, unknown>): Config => {
-        const hermioneConfig = config as unknown as Config;
+        const testplaneConfig = config as unknown as Config;
 
-        hermioneConfig.getBrowserIds = function () {
+        testplaneConfig.getBrowserIds = function () {
             return Object.keys(this.browsers);
         };
 
-        hermioneConfig.forBrowser = function (browserId: string) {
+        testplaneConfig.forBrowser = function (browserId: string) {
             return this.browsers[browserId];
         };
 
-        return hermioneConfig;
+        return testplaneConfig;
     };
 
     describe("getStorybookPathEndingWith", () => {
@@ -47,7 +52,7 @@ describe("utils", () => {
         });
     });
 
-    describe("patchHermioneSets", () => {
+    describe("patchTestplaneSets", () => {
         it("should create a new set with the specified browsers and files", () => {
             const config = getConfig_({
                 browsers: {
@@ -59,7 +64,7 @@ describe("utils", () => {
             const browserIds = ["chrome"];
             const files = ["file1", "file2"];
 
-            patchHermioneSets(config, browserIds, files);
+            patchTestplaneSets(config, browserIds, files);
 
             expect(config.sets).toEqual({
                 [STORYBOOK_SET_NAME]: {
@@ -79,7 +84,7 @@ describe("utils", () => {
             });
             const files = ["file1", "file2"];
 
-            patchHermioneSets(config, [], files);
+            patchTestplaneSets(config, [], files);
 
             expect(config.sets).toEqual({
                 [STORYBOOK_SET_NAME]: {
@@ -90,7 +95,7 @@ describe("utils", () => {
         });
     });
 
-    describe("patchHermioneBaseUrl", () => {
+    describe("patchTestplaneBaseUrl", () => {
         it("should update the baseUrl for all browsers", () => {
             const config = getConfig_({
                 browsers: {
@@ -101,14 +106,14 @@ describe("utils", () => {
 
             const baseUrl = "http://localhost:6006";
 
-            patchHermioneBaseUrl(config, baseUrl);
+            patchTestplaneBaseUrl(config, baseUrl);
 
             expect(config.browsers.chrome.baseUrl).toBe(baseUrl);
             expect(config.browsers.firefox.baseUrl).toBe(baseUrl);
         });
     });
 
-    describe("disableHermioneIsolation", () => {
+    describe("disableTestplaneIsolation", () => {
         it("should disable isolation for the specified browsers", () => {
             const config = getConfig_({
                 browsers: {
@@ -118,7 +123,7 @@ describe("utils", () => {
             });
             const browserIds = ["chrome"];
 
-            disableHermioneIsolation(config, browserIds);
+            disableTestplaneIsolation(config, browserIds);
 
             expect(config.browsers.chrome.isolation).toBe(false);
             expect(config.browsers.firefox.isolation).toBe(true);
@@ -132,7 +137,7 @@ describe("utils", () => {
                 },
             });
 
-            disableHermioneIsolation(config, []);
+            disableTestplaneIsolation(config, []);
 
             expect(config.browsers.chrome.isolation).toBe(false);
             expect(config.browsers.firefox.isolation).toBe(false);

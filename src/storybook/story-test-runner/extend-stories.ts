@@ -1,5 +1,5 @@
 import TypedModule from "module";
-import type { HermioneMetaConfig, HermioneStoryConfig } from "../../types";
+import type { TestplaneMetaConfig, TestplaneStoryConfig } from "../../types";
 import type { StorybookStory, StorybookStoryExtended } from "./types";
 
 const Module = TypedModule as any; // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -8,7 +8,7 @@ interface ImportingModule {
     _compile: (code: string, fileName: string) => unknown;
 }
 
-type StoryFile = { default: HermioneMetaConfig } & Record<string, HermioneStoryConfig>;
+type StoryFile = { default: TestplaneMetaConfig } & Record<string, TestplaneStoryConfig>;
 
 export function extendStoriesFromStoryFile(stories: StorybookStory[]): StorybookStoryExtended[] {
     const storiesMap = getStoriesMap(stories);
@@ -19,9 +19,9 @@ export function extendStoriesFromStoryFile(stories: StorybookStory[]): Storybook
     if (!storyFile) {
         if (storyPath.endsWith(".tsx")) {
             const msg = [
-                "[hermione-storybook]:",
+                "[@testplane/storybook]:",
                 "reading .tsx story files is not supported.",
-                `"hermione" section is ignored in "${storyPath}"`,
+                `"testplane" section is ignored in "${storyPath}"`,
             ].join(" ");
 
             console.warn(msg);
@@ -39,11 +39,11 @@ export function extendStoriesFromStoryFile(stories: StorybookStory[]): Storybook
     for (const storyName in storyFile) {
         if (storyName === "default") {
             withStoryFileExtendedStories.forEach(story => {
-                const hermioneStoryOpts = storyFile[storyName].hermione || {};
+                const testplaneStoryOpts = storyFile[storyName].testplane || {};
 
-                story.skip = hermioneStoryOpts.skip || false;
-                story.assertViewOpts = hermioneStoryOpts.assertViewOpts || {};
-                story.browserIds = hermioneStoryOpts.browserIds || null;
+                story.skip = testplaneStoryOpts.skip || false;
+                story.assertViewOpts = testplaneStoryOpts.assertViewOpts || {};
+                story.browserIds = testplaneStoryOpts.browserIds || null;
             });
 
             continue;
@@ -51,10 +51,10 @@ export function extendStoriesFromStoryFile(stories: StorybookStory[]): Storybook
 
         const storyMapKey = getStoryNameId(storyName);
 
-        if (storiesMap.has(storyMapKey) && storyFile[storyName].hermione) {
+        if (storiesMap.has(storyMapKey) && storyFile[storyName].testplane) {
             const story = storiesMap.get(storyMapKey) as StorybookStoryExtended;
 
-            story.extraTests = storyFile[storyName].hermione;
+            story.extraTests = storyFile[storyName].testplane;
         }
     }
 
