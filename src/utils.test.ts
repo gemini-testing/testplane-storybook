@@ -59,7 +59,7 @@ describe("utils", () => {
             const browserIds = ["chrome"];
             const files = ["file1", "file2"];
 
-            patchHermioneSets(config, browserIds, files);
+            patchHermioneSets(config, { browserIds, files });
 
             expect(config.sets).toEqual({
                 [STORYBOOK_SET_NAME]: {
@@ -79,12 +79,56 @@ describe("utils", () => {
             });
             const files = ["file1", "file2"];
 
-            patchHermioneSets(config, [], files);
+            patchHermioneSets(config, { browserIds: [], files });
 
             expect(config.sets).toEqual({
                 [STORYBOOK_SET_NAME]: {
                     browsers: ["chrome", "firefox"],
                     files: ["file1", "file2"],
+                },
+            });
+        });
+
+        it("should overwrite sets completely by default", () => {
+            const config = getConfig_({
+                browsers: {
+                    chrome: {},
+                    firefox: {},
+                },
+                sets: { "my-storybook-set": { files: ["my-files"], browsers: ["my-browsers"] } },
+            });
+            const files = ["file1", "file2"];
+
+            patchHermioneSets(config, { browserIds: [], files });
+
+            expect(config.sets).toEqual({
+                [STORYBOOK_SET_NAME]: {
+                    browsers: ["chrome", "firefox"],
+                    files: ["file1", "file2"],
+                },
+            });
+        });
+
+        it("should not overwrite sets completely with 'unsafeAllowOtherTests'", () => {
+            const config = getConfig_({
+                browsers: {
+                    chrome: {},
+                    firefox: {},
+                },
+                sets: { "my-storybook-set": { files: ["my-files"], browsers: ["my-browsers"] } },
+            });
+            const files = ["file1", "file2"];
+
+            patchHermioneSets(config, { browserIds: [], files, unsafeAllowOtherTests: true });
+
+            expect(config.sets).toEqual({
+                [STORYBOOK_SET_NAME]: {
+                    browsers: ["chrome", "firefox"],
+                    files: ["file1", "file2"],
+                },
+                "my-storybook-set": {
+                    browsers: ["my-browsers"],
+                    files: ["my-files"],
                 },
             });
         });
