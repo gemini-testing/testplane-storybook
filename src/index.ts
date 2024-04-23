@@ -81,8 +81,12 @@ function onHermioneMaster(hermione: Hermione, config: PluginConfig): void {
         const storyTestFiles = await buildStoryTestFiles(stories, { autoScreenshots: config.autoScreenshots });
 
         patchHermioneBaseUrl(hermione.config, iframeUrl);
-        patchHermioneSets(hermione.config, config.browserIds, storyTestFiles);
         disableHermioneIsolation(hermione.config, config.browserIds);
+        patchHermioneSets(hermione.config, {
+            browserIds: config.browserIds,
+            files: storyTestFiles,
+            unsafeAllowOtherTests: config.unsafeAllowOtherTests,
+        });
     });
 
     hermione.on(hermione.events.AFTER_TESTS_READ, testCollection => {

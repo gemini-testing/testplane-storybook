@@ -55,6 +55,7 @@ export interface PluginConfig {
     localport: number;
     remoteStorybookUrl: string;
     browserIds: Array<string | RegExp>;
+    unsafeAllowOtherTests: boolean;
 }
 
 export type PluginPartialConfig = Partial<PluginConfig>;
@@ -70,6 +71,7 @@ export function parseConfig(options: PluginPartialConfig): PluginConfig {
             localport: numberOption("localport", 6006),
             remoteStorybookUrl: stringOption("remoteStorybookUrl", ""),
             browserIds: stringAndRegExpArrayOption("browserIds", []),
+            unsafeAllowOtherTests: booleanOption("unsafeAllowOtherTests", false),
         }),
         { envPrefix: "hermione_storybook_", cliPrefix: "--storybook-" },
     );
