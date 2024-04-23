@@ -50,14 +50,10 @@ export const patchHermioneSets = (
     const autoStorybookSet = { browsers, files };
 
     if (unsafeAllowOtherTests) {
+        config.sets = config.sets || {};
         config.sets[STORYBOOK_SET_NAME] = autoStorybookSet;
     } else {
-        config.sets = {
-            [STORYBOOK_SET_NAME]: {
-                browsers,
-                files,
-            },
-        };
+        config.sets = { [STORYBOOK_SET_NAME]: autoStorybookSet };
     }
 };
 
