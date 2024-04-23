@@ -38,15 +38,28 @@ export const getStorybookPathEndingWith = (url: string, pathEnding: string): str
     return urlObj.toString();
 };
 
-export const patchTestplaneSets = (config: Config, browserIds: Array<string | RegExp>, files: string[]): void => {
+export const patchTestplaneSets = (
+    config: Config,
+    {
+        browserIds,
+        files,
+        unsafeAllowOtherTests = false,
+    }: { browserIds: Array<string | RegExp>; files: string[]; unsafeAllowOtherTests?: boolean },
+): void => {
     const browsers = getFilteredBrowserIds(config, browserIds);
+    const autoStorybookSet = { browsers, files };
 
-    config.sets = {
-        [STORYBOOK_SET_NAME]: {
-            browsers,
-            files,
-        },
-    };
+    if (unsafeAllowOtherTests) {
+        config.sets = config.sets || {};
+        config.sets[STORYBOOK_SET_NAME] = autoStorybookSet;
+    } else {
+        config.sets = {
+            [STORYBOOK_SET_NAME]: {
+                browsers,
+                files,
+            },
+        };
+    }
 };
 
 export const patchTestplaneBaseUrl = (config: Config, baseUrl: string): void => {

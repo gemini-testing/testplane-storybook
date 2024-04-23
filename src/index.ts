@@ -81,8 +81,12 @@ function onTestplaneMaster(testplane: Testplane, config: PluginConfig): void {
         const storyTestFiles = await buildStoryTestFiles(stories, { autoScreenshots: config.autoScreenshots });
 
         patchTestplaneBaseUrl(testplane.config, iframeUrl);
-        patchTestplaneSets(testplane.config, config.browserIds, storyTestFiles);
         disableTestplaneIsolation(testplane.config, config.browserIds);
+        patchTestplaneSets(testplane.config, {
+            browserIds: config.browserIds,
+            files: storyTestFiles,
+            unsafeAllowOtherTests: config.unsafeAllowOtherTests,
+        });
     });
 
     testplane.on(testplane.events.AFTER_TESTS_READ, testCollection => {
