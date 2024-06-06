@@ -101,6 +101,7 @@ const meta: WithTestplane<Meta<typeof Button>> = {
     component: Button,
     testplane: {
         skip: false, // if true, skips all Testplane tests from this story file
+        autoscreenshotSelector: ".my-selector", // Custom selector to auto-screenshot elements
         browserIds: ["chrome"], // Testplane browsers to run tests from this story file
         assertViewOpts: { // override default assertView options for tests from this file
             ignoreDiffPixelCount: 5

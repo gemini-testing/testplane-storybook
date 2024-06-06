@@ -7,6 +7,7 @@ export interface StorybookStoryExtended extends StorybookStory {
     assertViewOpts: AssertViewOpts;
     browserIds: Array<string | RegExp> | null;
     extraTests?: Record<string, TestplaneTestFunction>;
+    autoscreenshotSelector: string | null;
 }
 
 export type ExecutionContextExtended = WebdriverIO.Browser["executionContext"] & {

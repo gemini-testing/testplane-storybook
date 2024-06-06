@@ -44,6 +44,7 @@ export function extendStoriesFromStoryFile(stories: StorybookStory[]): Storybook
                 story.skip = testplaneStoryOpts.skip || false;
                 story.assertViewOpts = testplaneStoryOpts.assertViewOpts || {};
                 story.browserIds = testplaneStoryOpts.browserIds || null;
+                story.autoscreenshotSelector = testplaneStoryOpts.autoscreenshotSelector || null;
             });
 
             continue;
