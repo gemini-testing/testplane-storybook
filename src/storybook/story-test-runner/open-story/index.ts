@@ -34,7 +34,7 @@ export async function openStory(browser: WebdriverIO.Browser, story: StorybookSt
             throw new PlayFunctionError(storyLoadResult.playFunctionError);
         }
 
-        if (!storyLoadResult.rootSelector) {
+        if (!story.autoscreenshotSelector && !storyLoadResult.rootSelector) {
             throw new Error("Story root selector is not found");
         }
 

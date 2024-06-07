@@ -24,7 +24,7 @@ function createTestplaneTests(story: StorybookStoryExtended, { autoScreenshots }
 
                 const result = await openStoryStep(ctx.browser, story);
 
-                await autoScreenshotStep(ctx.browser, result.rootSelector);
+                await autoScreenshotStep(ctx.browser, story.autoscreenshotSelector || result.rootSelector);
             });
         }
 

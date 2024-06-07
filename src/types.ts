@@ -22,6 +22,7 @@ export type TestplaneMetaConfig<T = void> = Combined<
         skip?: boolean;
         assertViewOpts?: AssertViewOpts;
         browserIds?: Array<string | RegExp>;
+        autoscreenshotSelector?: string;
     }>,
     T
 >;
