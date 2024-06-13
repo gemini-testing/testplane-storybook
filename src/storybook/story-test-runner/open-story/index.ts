@@ -63,6 +63,6 @@ async function extendBrowserMeta(browser: WebdriverIO.Browser, story: StorybookS
     (browser.executionContext as ExecutionContextExtended)["@testplane/storybook-assertView-opts"] =
         story.assertViewOpts;
 
-    await browser.setMeta("url", urlObj.toString().replace("iframe.html", ""));
+    await browser.setMeta("url", urlObj.toString().replace("iframe.html", "index.html"));
     await browser.setMeta("storyFile", story.importPath);
 }
