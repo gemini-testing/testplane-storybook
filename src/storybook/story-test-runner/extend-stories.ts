@@ -10,6 +10,8 @@ interface ImportingModule {
 
 type StoryFile = { default: TestplaneMetaConfig } & Record<string, TestplaneStoryConfig>;
 
+let loggedStoryFileRequireError = Boolean(process.env.TESTPLANE_STORYBOOK_DISABLE_STORY_REQUIRE_WARNING);
+
 export function extendStoriesFromStoryFile(stories: StorybookStory[]): StorybookStoryExtended[] {
     const storiesMap = getStoriesMap(stories);
     const storyPath = stories[0].absolutePath;
@@ -17,16 +19,6 @@ export function extendStoriesFromStoryFile(stories: StorybookStory[]): Storybook
     const withStoryFileExtendedStories = stories as StorybookStoryExtended[];
 
     if (!storyFile) {
-        if (storyPath.endsWith(".tsx")) {
-            const msg = [
-                "[@testplane/storybook]:",
-                "reading .tsx story files is not supported.",
-                `"testplane" section is ignored in "${storyPath}"`,
-            ].join(" ");
-
-            console.warn(msg);
-        }
-
         return withStoryFileExtendedStories.map(story => {
             story.skip = false;
             story.assertViewOpts = {};
@@ -81,13 +73,24 @@ function getStoryNameId(storyName: string): string {
 }
 
 function getStoryFile(storyPath: string): StoryFile | null {
-    const unmockFn = mockLoaders();
+    const unmockFn = mockLoaders({ except: storyPath });
 
     let storyFile;
 
     try {
         storyFile = require(storyPath); // eslint-disable-line @typescript-eslint/no-var-requires
-    } catch (_) {} // eslint-disable-line no-empty
+    } catch (error) {
+        if (!loggedStoryFileRequireError) {
+            loggedStoryFileRequireError = true;
+
+            const warningMessage = [
+                `"testplane" section is ignored in storyfile "${storyPath}",`,
+                `because the file could not be read:\n${error}`,
+            ].join(" ");
+
+            console.warn(warningMessage);
+        }
+    }
 
     const isStoryFileFailedToLoad = !storyFile || typeof storyFile === "function";
 
@@ -96,9 +99,11 @@ function getStoryFile(storyPath: string): StoryFile | null {
     return isStoryFileFailedToLoad ? null : storyFile;
 }
 
-function mockLoaders(): () => void {
+function mockLoaders(opts: { except?: string }): () => void {
     const unmockModuleCbs = [".css", ".scss", ".svg", ".png", ".ico", ".jpg", ".jpeg", ".gif", ".yml"].map(mockModule);
-    const unmockFailedModuleCbs = [".js", ".ts", ".jsx", ".tsx", ".mjs", ".mts"].map(mockFailedModule);
+    const unmockFailedModuleCbs = [".js", ".ts", ".jsx", ".tsx", ".mjs", ".mts"].map(ext =>
+        mockFailedModule(ext, opts),
+    );
     const unmockCb = (): void => unmockModuleCbs.concat(unmockFailedModuleCbs).forEach(unmock => unmock());
 
     return unmockCb;
@@ -114,7 +119,7 @@ function mockModule(extension: string): () => void {
     };
 }
 
-function mockFailedModule(extension: string): () => void {
+function mockFailedModule(extension: string, { except }: { except?: string }): () => void {
     const originalModule = Module._extensions[extension];
     const getMockedModuleProxy = (): any => // eslint-disable-line @typescript-eslint/no-explicit-any
         // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -140,6 +145,10 @@ function mockFailedModule(extension: string): () => void {
     };
 
     Module._extensions[extension] = (m: ImportingModule, filename: string) => {
+        if (filename === except) {
+            return originalModule(m, filename);
+        }
+
         if (filename.includes("/node_modules/@storybook/")) {
             return applyMock(filename);
         }
