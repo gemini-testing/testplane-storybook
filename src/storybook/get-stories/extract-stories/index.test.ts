@@ -18,13 +18,13 @@ describe("get-stories/extract-stories", () => {
     });
 
     it("should call logger.warn when an unsupported version is provided", () => {
-        const storiesJson = { v: 5 as unknown, entries: {} } as StorybookIndexJson;
+        const storiesJson = { v: 6 as unknown, entries: {} } as StorybookIndexJson;
 
         extractStories(storiesJson);
 
         expect(loggerMock.warn).toHaveBeenCalledTimes(3);
         expect(loggerMock.warn.mock.calls[0][0]).toEqual("Unsupported version of stories json");
-        expect(loggerMock.warn.mock.calls[1][0]).toEqual("'3, 4' expected, but 5 found");
+        expect(loggerMock.warn.mock.calls[1][0]).toEqual("'3, 4, 5' expected, but 6 found");
         expect(loggerMock.warn.mock.calls[2][0]).toEqual("I'll try to do my best with it! (acting like it's v4)");
     });
 

@@ -23,5 +23,6 @@ export const extractStories = (storiesJson: StorybookDataJson): StorybookRawStor
         logger.warn("I'll try to do my best with it! (acting like it's v4)");
     }
 
+    // Using "extractStoriesV4" for storiesJson 5 version, as it is compatible
     return storiesJson.v === supportedStoryVersionV3 ? extractStoriesV3(storiesJson) : extractStoriesV4(storiesJson);
 };
