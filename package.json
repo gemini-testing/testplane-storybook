@@ -1,6 +1,6 @@
 {
     "name": "@testplane/storybook",
-    "version": "1.2.1",
+    "version": "1.2.2",
     "description": "Testplane plugin that enables runtime screenshot storybook tests autogeneration",
     "main": "build/index.js",
     "files": [
