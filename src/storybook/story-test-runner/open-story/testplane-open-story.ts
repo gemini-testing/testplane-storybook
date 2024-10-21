@@ -11,7 +11,7 @@ interface HTMLElement {
     innerText: string;
 }
 
-type StorybookWindow = Window &
+export type StorybookWindow = Window &
     typeof globalThis & {
         __HERMIONE_OPEN_STORY__: (storyId: string, remountOnly: boolean, done: (result: string) => void) => void;
         __STORYBOOK_ADDONS_CHANNEL__: EventEmitter;
