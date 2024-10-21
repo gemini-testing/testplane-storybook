@@ -1,5 +1,5 @@
 import { isBoolean, isString, isNumber, isArray, isRegExp } from "lodash";
-import { option, root, section } from "gemini-configparser";
+import { option, root, section, map } from "gemini-configparser";
 import type { Parser } from "gemini-configparser";
 
 const assertType = <T>(name: string, validationFn: (v: unknown) => boolean, type: string) => {
@@ -52,6 +52,7 @@ export interface PluginConfig {
     enabled: boolean;
     storybookConfigDir: string;
     autoScreenshots: boolean;
+    customAutoScreenshots: Record<string, { globals: Record<string, unknown>}>;
     localport: number;
     remoteStorybookUrl: string;
     browserIds: Array<string | RegExp>;
@@ -68,6 +69,11 @@ export function parseConfig(options: PluginPartialConfig): PluginConfig {
             enabled: booleanOption("enabled", true),
             storybookConfigDir: stringOption("storybookConfigDir", ".storybook"),
             autoScreenshots: booleanOption("autoScreenshots", true),
+            customAutoScreenshots: map(section({
+                globals: section({
+                    theme: stringOption("theme", ""),
+                }),
+            })),
             localport: numberOption("localport", 6006),
             remoteStorybookUrl: stringOption("remoteStorybookUrl", ""),
             browserIds: stringAndRegExpArrayOption("browserIds", []),

@@ -1,5 +1,6 @@
 import { PlayFunctionError } from "../play-function-error";
 import testplaneOpenStory from "./testplane-open-story";
+export type { StorybookWindow } from "./testplane-open-story";
 import type { ExecutionContextExtended, StorybookStoryExtended } from "../types";
 import type { StoryLoadResult } from "./testplane-open-story";
 
