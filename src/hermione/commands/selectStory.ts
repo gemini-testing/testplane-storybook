@@ -53,6 +53,10 @@ export function createSelectStory(storybookUrl: string, sessionStore: SessionSto
             }
         }
 
+        await this.waitUntil(() => this.execute(function() {
+            return Boolean(window.__HERMIONE_SELECT_STORY__);
+        }), {timeout: 3000, interval: 100, timeoutMsg: "Hermione addon is not connected to storybook config"});
+
         try {
             await this.executeAsync(
                 function (storyId, args, doneCb) {
