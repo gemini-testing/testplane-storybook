@@ -4,15 +4,31 @@
 import { EventEmitter } from "events";
 import P from "bluebird";
 import Events from "@storybook/core-events";
-import { addons, makeDecorator } from "@storybook/addons";
+import { addons, makeDecorator } from "@storybook/preview-api";
 import HermioneDecorator from "./hermione";
 import { NON_EXISTENT_STORY_ID } from "./../constants";
-import "jest-extended";
 
-import type { Channel, Args } from "@storybook/addons";
+import type { Args } from "@storybook/csf";
 import type { StoryRenderError } from "../../types";
 
-jest.mock("@storybook/addons");
+type Channel = ReturnType<typeof addons.getChannel>;
+
+jest.mock("@storybook/preview-api", () => ({
+    addons: { getChannel: jest.fn() },
+    makeDecorator: jest.fn(),
+}));
+
+jest.mock("@storybook/core-events", () => ({
+    default: new Proxy(
+        {},
+        {
+            get(_, key: string) {
+                return jest.requireActual("lodash").camelCase(key);
+            },
+        },
+    ),
+    __esModule: true,
+}));
 
 const getChannelMock = (): Channel => {
     const channel = new EventEmitter() as unknown as Channel;
@@ -30,7 +46,7 @@ describe("hermione-addon/hermione-decorator", () => {
 
     beforeEach(() => {
         channel = getChannelMock();
-        (addons.getChannel as jest.Mock).mockReturnValue(channel);
+        jest.mocked(addons.getChannel).mockReturnValue(channel);
     });
 
     describe("'make' method", () => {

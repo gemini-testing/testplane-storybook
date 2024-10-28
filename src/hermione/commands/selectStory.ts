@@ -1,5 +1,5 @@
 import { STORYBOOK_PREVIEW, RE_METHOD_NOT_IMPLEMENTED } from "../constants";
-import type { Args } from "@storybook/addons";
+import type { Args } from "@storybook/csf";
 
 type SelectStoryFunction = (storyId: string, args?: Args) => Promise<void>;
 declare global {
@@ -20,7 +20,7 @@ export function createSelectStory(storybookUrl: string, sessionStore: SessionSto
                 return Boolean(window.__HERMIONE_SELECT_STORY__);
             });
         } catch (err) {
-            if (!RE_METHOD_NOT_IMPLEMENTED.test(err.message)) {
+            if (!RE_METHOD_NOT_IMPLEMENTED.test((err as Error).message)) {
                 throw err;
             }
         }
@@ -31,7 +31,7 @@ export function createSelectStory(storybookUrl: string, sessionStore: SessionSto
             try {
                 currUrl = await this.getUrl();
             } catch (err) {
-                if (!RE_METHOD_NOT_IMPLEMENTED.test(err.message)) {
+                if (!RE_METHOD_NOT_IMPLEMENTED.test((err as Error).message)) {
                     throw err;
                 }
             }
@@ -62,7 +62,7 @@ export function createSelectStory(storybookUrl: string, sessionStore: SessionSto
                 args,
             );
         } catch (err) {
-            if (!RE_METHOD_NOT_IMPLEMENTED.test(err.message)) {
+            if (!RE_METHOD_NOT_IMPLEMENTED.test((err as Error).message)) {
                 throw err;
             }
 

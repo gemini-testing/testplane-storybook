@@ -1,4 +1,4 @@
-import type { Args } from "@storybook/addons";
+import type { Args } from "@storybook/csf";
 
 export type SelectStoryHermione = (storyId: string, args?: Args) => Promise<void>;
 export type SelectStoryStorybook = (

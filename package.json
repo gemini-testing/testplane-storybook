@@ -41,33 +41,35 @@
     },
     "homepage": "https://github.com/gemini-testing/hermione-storybook#readme",
     "devDependencies": {
+        "@babel/core": "^7.26.0",
+        "@babel/preset-env": "^7.26.0",
+        "@babel/preset-typescript": "^7.26.0",
+        "@storybook/csf": "^0.1.11",
         "@types/bluebird": "^3.5.36",
-        "@types/jest": "^27.0.1",
-        "@types/jest-when": "^2.7.3",
+        "@types/jest": "^27.5.2",
+        "@types/jest-when": "^3.5.5",
         "@types/lodash": "^4.14.172",
         "@types/node": "^12.20.19",
         "@typescript-eslint/eslint-plugin": "^4.29.3",
         "@typescript-eslint/parser": "^4.29.3",
+        "babel-jest": "^29.7.0",
         "bluebird": "^3.7.2",
         "eslint": "^7.32.0",
         "eslint-config-gemini-testing": "^3.0.0",
-        "hermione": "^4.4.0",
-        "jest": "^27.0.6",
-        "jest-extended": "^0.11.5",
-        "jest-when": "^3.3.1",
+        "hermione": "^8.9.6",
+        "jest": "^27.5.1",
+        "jest-extended": "^4.0.2",
+        "jest-when": "^3.6.0",
         "onchange": "^7.1.0",
         "prettier": "^2.3.2",
         "rimraf": "^3.0.2",
-        "ts-jest": "^27.0.4",
-        "typescript": "^4.3.5"
+        "storybook": "^8.3.6",
+        "typescript": "^4.9.5"
     },
     "dependencies": {
-        "@storybook/addons": "^6.3.6",
-        "@storybook/core-events": "^6.3.6",
+        "@storybook/core-events": "^8.3.6",
+        "@storybook/preview-api": "^8.3.6",
         "gemini-configparser": "^1.1.0",
         "lodash": "^4.17.21"
-    },
-    "peerDependencies": {
-        "hermione": ">=4.2.2"
     }
 }
