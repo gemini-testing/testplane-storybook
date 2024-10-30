@@ -1,11 +1,14 @@
 import Events from "@storybook/core-events";
-import { addons, makeDecorator } from "@storybook/addons";
+import { addons, makeDecorator } from "@storybook/preview-api";
 import { isUndefined, isEmpty } from "lodash";
 import EnhancedPromise from "../utils/enhanced-promise";
 import { PARAMETER_NAME, NON_EXISTENT_STORY_ID } from "../constants";
 
-import type { MakeDecoratorResult, Channel, Args } from "@storybook/addons";
+import type { Args } from "@storybook/csf";
 import type { SelectStoryStorybook, StoryRenderError, FontFaceSet } from "../../types";
+
+type MakeDecoratorResult = ReturnType<typeof makeDecorator>;
+type Channel = ReturnType<typeof addons.getChannel>;
 
 declare global {
     interface Window {

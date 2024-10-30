@@ -5,13 +5,13 @@ module.exports = {
             "tsconfig": "tsconfig.spec.json",
         },
     },
-    preset: "ts-jest",
-    setupFilesAfterEnv: ["jest-extended"],
+    setupFilesAfterEnv: ["jest-extended/all", "jest-when"],
     testMatch: [
         "**/src/**/*.test.ts",
     ],
     modulePathIgnorePatterns: [
-        "<rootDir>/build",
+        "/node_modules/",
+        "/build/",
     ],
     verbose: true,
 };

@@ -3,6 +3,6 @@
     "exclude": ["src/**/__*", "src/**/*.test.ts"],
     "compilerOptions": {
         "outDir": "build",
-        "types": ["node", "hermione"]
+        "types": ["node"]
     }
 }

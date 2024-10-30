@@ -1,3 +1,4 @@
+import { set } from "lodash";
 import { EventEmitter } from "events";
 import type Hermione from "hermione";
 import type { PluginConfig, PluginPartialConfig } from "../hermione/config";
@@ -6,7 +7,7 @@ export const getHermioneMock = (opts: { isWorker: boolean }): Hermione => {
     const hermione = new EventEmitter() as unknown as Hermione;
 
     hermione.isWorker = () => opts.isWorker;
-    hermione.events = { NEW_BROWSER: "newBrowser" } as Hermione.EVENTS;
+    set(hermione, "events", { NEW_BROWSER: "newBrowser" });
     jest.spyOn(hermione, "on");
 
     return hermione;

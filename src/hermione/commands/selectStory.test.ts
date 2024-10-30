@@ -5,8 +5,10 @@ import P from "bluebird";
 import { createSelectStory } from "./selectStory";
 import { STORYBOOK_PREVIEW } from "../constants";
 import "jest-extended";
-import type { Args } from "@storybook/addons";
+import type { Args } from "@storybook/csf";
 import type { SelectStoryStorybook } from "../../types";
+
+import "jest-when";
 
 describe("hermione-plugin/selectStory", () => {
     let browser: WebdriverIO.Browser;

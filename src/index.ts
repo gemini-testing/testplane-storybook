@@ -1,5 +1,5 @@
 import HermioneDecorator from "./addon/decorators/hermione";
-import type { MakeDecoratorResult } from "@storybook/addons";
+import type { makeDecorator } from "@storybook/preview-api";
 
 export * from "./types";
-export const withHermione = (): MakeDecoratorResult => new HermioneDecorator().make();
+export const withHermione = (): ReturnType<typeof makeDecorator> => new HermioneDecorator().make();
