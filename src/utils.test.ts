@@ -6,6 +6,7 @@ import {
     patchTestplaneSets,
     disableTestplaneIsolation,
     patchTestplaneBaseUrl,
+    patchSystemExtensions,
 } from "./utils";
 
 describe("utils", () => {
@@ -49,6 +50,32 @@ describe("utils", () => {
             const expectedUrl = "http://localhost:6006/unknown-ending/new-ending";
 
             expect(getStorybookPathEndingWith(url, pathEnding)).toBe(expectedUrl);
+        });
+    });
+
+    describe("patchSystemExtensions", () => {
+        it("should add .js, if it is not present in system.fileExtensions", () => {
+            const config = getConfig_({
+                system: {
+                    fileExtensions: [".ts"],
+                },
+            });
+
+            patchSystemExtensions(config);
+
+            expect(config.system.fileExtensions).toEqual([".ts", ".js"]);
+        });
+
+        it("should not .js, if it is already present in system.fileExtensions", () => {
+            const config = getConfig_({
+                system: {
+                    fileExtensions: [".js", ".mjs"],
+                },
+            });
+
+            patchSystemExtensions(config);
+
+            expect(config.system.fileExtensions).toEqual([".js", ".mjs"]);
         });
     });
 

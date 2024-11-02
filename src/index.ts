@@ -5,7 +5,7 @@ import { STORYBOOK_IFRAME_PATH } from "./constants";
 import { getStorybookPathEndingWith } from "./utils";
 import { getStories } from "./storybook/get-stories";
 import { buildStoryTestFiles } from "./storybook/story-to-test";
-import { patchTestplaneBaseUrl, patchTestplaneSets, disableTestplaneIsolation } from "./utils";
+import { patchTestplaneBaseUrl, patchTestplaneSets, patchSystemExtensions, disableTestplaneIsolation } from "./utils";
 import { getStorybookDevServer } from "./storybook/dev-server";
 import type { PluginConfig, PluginPartialConfig } from "./config";
 import type { ExecutionContextExtended } from "./storybook/story-test-runner/types";
@@ -82,6 +82,7 @@ function onTestplaneMaster(testplane: Testplane, config: PluginConfig): void {
 
         patchTestplaneBaseUrl(testplane.config, iframeUrl);
         disableTestplaneIsolation(testplane.config, config.browserIds);
+        patchSystemExtensions(testplane.config);
         patchTestplaneSets(testplane.config, {
             browserIds: config.browserIds,
             files: storyTestFiles,

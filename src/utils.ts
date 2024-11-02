@@ -38,6 +38,12 @@ export const getStorybookPathEndingWith = (url: string, pathEnding: string): str
     return urlObj.toString();
 };
 
+export const patchSystemExtensions = (config: Config): void => {
+    if (!config.system.fileExtensions.includes(".js")) {
+        config.system.fileExtensions.push(".js");
+    }
+};
+
 export const patchTestplaneSets = (
     config: Config,
     {
