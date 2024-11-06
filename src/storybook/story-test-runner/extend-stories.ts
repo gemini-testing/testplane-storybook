@@ -23,6 +23,7 @@ export function extendStoriesFromStoryFile(stories: StorybookStory[]): Storybook
             story.skip = false;
             story.assertViewOpts = {};
             story.browserIds = null;
+            story.autoScreenshotStorybookGlobals = {};
 
             return story;
         });
@@ -37,6 +38,7 @@ export function extendStoriesFromStoryFile(stories: StorybookStory[]): Storybook
                 story.assertViewOpts = testplaneStoryOpts.assertViewOpts || {};
                 story.browserIds = testplaneStoryOpts.browserIds || null;
                 story.autoscreenshotSelector = testplaneStoryOpts.autoscreenshotSelector || null;
+                story.autoScreenshotStorybookGlobals = testplaneStoryOpts.autoScreenshotStorybookGlobals || {};
             });
 
             continue;
@@ -86,6 +88,8 @@ function getStoryFile(storyPath: string): StoryFile | null {
             const warningMessage = [
                 `"testplane" section is ignored in storyfile "${storyPath}",`,
                 `because the file could not be read:\n${error}`,
+                "\nThere could be other story files.",
+                "\nSet 'TESTPLANE_STORYBOOK_DISABLE_STORY_REQUIRE_WARNING' environment variable to hide this warning",
             ].join(" ");
 
             console.warn(warningMessage);

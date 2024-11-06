@@ -1,5 +1,5 @@
-import { isBoolean, isString, isNumber, isArray, isRegExp } from "lodash";
-import { option, root, section, map } from "gemini-configparser";
+import { isBoolean, isString, isNumber, isArray, isRegExp, isNull, isPlainObject } from "lodash";
+import { option, root, section } from "gemini-configparser";
 import type { Parser } from "gemini-configparser";
 
 const assertType = <T>(name: string, validationFn: (v: unknown) => boolean, type: string) => {
@@ -8,6 +8,20 @@ const assertType = <T>(name: string, validationFn: (v: unknown) => boolean, type
             throw new Error(`"${name}" option must be a ${type}, but got ${typeof v}`);
         }
     };
+};
+
+const assertRecordOfRecords = (value: unknown, name: string): void => {
+    if (!isNull(value) && !isPlainObject(value)) {
+        throw new Error(`"${name}" must be an object`);
+    }
+
+    const record = value as Record<string, unknown>;
+
+    for (const key of Object.keys(record)) {
+        if (!isPlainObject(record[key])) {
+            throw new Error(`"${name}.${key}" must be an object`);
+        }
+    }
 };
 
 const booleanOption = (name: string, defaultValue = false): Parser<boolean> =>
@@ -48,11 +62,22 @@ const stringAndRegExpArrayOption = (name: string, defaultValue: string[]): Parse
         },
     });
 
+const optionalRecordOfRecordsOption = (
+    name: string,
+    defaultValue: Record<string, unknown> = {},
+): Parser<Record<string, Record<string, unknown>>> =>
+    option({
+        parseEnv: JSON.parse,
+        parseCli: JSON.parse,
+        defaultValue,
+        validate: value => assertRecordOfRecords(value, name),
+    });
+
 export interface PluginConfig {
     enabled: boolean;
     storybookConfigDir: string;
     autoScreenshots: boolean;
-    customAutoScreenshots: Record<string, { globals: Record<string, unknown>}>;
+    autoScreenshotStorybookGlobals: Record<string, Record<string, unknown>>;
     localport: number;
     remoteStorybookUrl: string;
     browserIds: Array<string | RegExp>;
@@ -69,11 +94,7 @@ export function parseConfig(options: PluginPartialConfig): PluginConfig {
             enabled: booleanOption("enabled", true),
             storybookConfigDir: stringOption("storybookConfigDir", ".storybook"),
             autoScreenshots: booleanOption("autoScreenshots", true),
-            customAutoScreenshots: map(section({
-                globals: section({
-                    theme: stringOption("theme", ""),
-                }),
-            })),
+            autoScreenshotStorybookGlobals: optionalRecordOfRecordsOption("autoScreenshotStorybookGlobals", {}),
             localport: numberOption("localport", 6006),
             remoteStorybookUrl: stringOption("remoteStorybookUrl", ""),
             browserIds: stringAndRegExpArrayOption("browserIds", []),

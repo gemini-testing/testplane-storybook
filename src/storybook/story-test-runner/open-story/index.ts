@@ -4,7 +4,11 @@ export type { StorybookWindow } from "./testplane-open-story";
 import type { ExecutionContextExtended, StorybookStoryExtended } from "../types";
 import type { StoryLoadResult } from "./testplane-open-story";
 
-export async function openStory(browser: WebdriverIO.Browser, story: StorybookStoryExtended): Promise<StoryLoadResult> {
+export async function openStory(
+    browser: WebdriverIO.Browser,
+    story: StorybookStoryExtended,
+    storybookGlobals: Record<string, unknown>,
+): Promise<StoryLoadResult> {
     const browserConfig = await browser.getConfig();
     const currentBrowserUrl = await browser.getUrl();
 
@@ -25,7 +29,7 @@ export async function openStory(browser: WebdriverIO.Browser, story: StorybookSt
     await extendBrowserMeta(browser, story);
 
     return browser.runStep("wait story load", async (): Promise<StoryLoadResult> => {
-        const storyLoadResult = await testplaneOpenStory.execute(browser, story.id, shouldRemount);
+        const storyLoadResult = await testplaneOpenStory.execute(browser, story.id, storybookGlobals, shouldRemount);
 
         if (storyLoadResult.loadError) {
             throw new Error(storyLoadResult.loadError);
