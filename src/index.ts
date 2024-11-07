@@ -78,7 +78,10 @@ function onTestplaneMaster(testplane: Testplane, config: PluginConfig): void {
 
         const stories = await getStories(storybookUrl);
 
-        const storyTestFiles = await buildStoryTestFiles(stories, { autoScreenshots: config.autoScreenshots });
+        const storyTestFiles = await buildStoryTestFiles(stories, {
+            autoScreenshots: config.autoScreenshots,
+            autoScreenshotStorybookGlobals: config.autoScreenshotStorybookGlobals,
+        });
 
         patchTestplaneBaseUrl(testplane.config, iframeUrl);
         disableTestplaneIsolation(testplane.config, config.browserIds);

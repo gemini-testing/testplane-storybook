@@ -52,24 +52,44 @@ With this minimal config, you will be able to run `npx testplane --storybook` to
 
 Full plugin config:
 
-| **Parameter**      | **Type**                | **Default&nbsp;value** | **Description**                                                             |
-| ------------------ | ----------------------- | ---------------------- | --------------------------------------------------------------------------- |
-| enabled	         | Boolean                 | true                   | Enable / disable the plugin                                                                      |
-| storybookConfigDir | String                  | ".storybook"           | Path to the storybook configuration directory                                                                   |
-| autoScreenshots	 | Boolean                 | true                   | Enable / disable auto-screenshot tests                                                                       |
-| localport	         | Number                  | 6006                   | Port to launch storybook dev server on                                                                          |
-| remoteStorybookUrl | String                  | ""                     | URL of the remote Storybook. If specified, local storybook dev sever would not be launched                             |
-| browserIds         | Array<String \| RegExp> | []                     | Array of `browserId` to run storybook tests on. By default, all of browsers, specified in Testplane config would be used |
+| **Parameter**                      | **Type**                                | **Default&nbsp;value** | **Description**                                                             |
+| ---------------------------------- | --------------------------------------- | ---------------------- | --------------------------------------------------------------------------- |
+| enabled	                         | Boolean                                 | true                   | Enable / disable the plugin                                                                      |
+| storybookConfigDir                 | String                                  | ".storybook"           | Path to the storybook configuration directory                                                                   |
+| autoScreenshots	                 | Boolean                                 | true                   | Enable / disable auto-screenshot tests                                                                       |
+| autoScreenshotStorybookGlobals	 | Record<string, Record<string, unknown>> | {}                     | Run multiple auto-screenshot tests with different [storybook globals](https://storybook.js.org/docs/7/essentials/toolbars-and-globals#globals)                                                                       |
+| localport	                         | Number                                  | 6006                   | Port to launch storybook dev server on                                                                          |
+| remoteStorybookUrl                 | String                                  | ""                     | URL of the remote Storybook. If specified, local storybook dev sever would not be launched                             |
+| browserIds                         | Array<String \| RegExp>                 | []                     | Array of `browserId` to run storybook tests on. By default, all of browsers, specified in Testplane config would be used |
 
 > ⚠️ *Storybook tests performance greatly depends on [Testplane testsPerSession](https://github.com/gemini-testing/testplane#testspersession) parameter, as these tests speeds up on reusing existing sessions, so setting values around 20+ is preferred*
 
 > ⚠️ *These tests ignore [Testplane isolation](https://github.com/gemini-testing/testplane#isolation). It would be turned off unconditionally*
 
+#### autoScreenshotStorybookGlobals
+
+For example, with `autoScreenshotStorybookGlobals` set to:
+
+```json
+{
+  "default": {},
+  "light theme": {
+    "theme": "light"
+  },
+  "dark theme": {
+    "theme": "dark"
+  }
+}
+```
+
+3 autoscreenshot tests will be generated for each story, each test having its corresponding storybook globals value:
+- `... Autoscreenshot default`
+- `... Autoscreenshot light theme`
+- `... Autoscreenshot dark theme`
+
 ## Advanced usage
 
 If you have `ts-node` in your project, you can write your Testplane tests right inside of storybook story files:
-
-> ⚠️ *Storybook story files must have `.js` or `.ts` extension for this to work*
 
 ```ts
 import type { StoryObj } from "@storybook/react";
@@ -103,6 +123,12 @@ const meta: WithTestplane<Meta<typeof Button>> = {
         skip: false, // if true, skips all Testplane tests from this story file
         autoscreenshotSelector: ".my-selector", // Custom selector to auto-screenshot elements
         browserIds: ["chrome"], // Testplane browsers to run tests from this story file
+        autoScreenshotStorybookGlobals: {
+            // override default autoScreenshotStorybookGlobals options from plugin config
+            // tests for default autoScreenshotStorybookGlobals from plugin config won't be generated
+            "es locale": { locale: "es" },
+            "fr locale": { locale: "fr" }
+        },
         assertViewOpts: { // override default assertView options for tests from this file
             ignoreDiffPixelCount: 5
         }

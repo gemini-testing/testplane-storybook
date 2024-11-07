@@ -9,6 +9,7 @@ import type { StorybookStoryExtended } from "../get-stories";
 
 export interface TestplaneOpts {
     autoScreenshots: boolean;
+    autoScreenshotStorybookGlobals: Record<string, Record<string, unknown>>;
 }
 
 const testplaneTestNameSuffix = ".testplane.js";

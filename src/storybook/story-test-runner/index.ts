@@ -16,16 +16,36 @@ export function run(stories: StorybookStory[], opts: TestplaneOpts): void {
     withStoryFileDataStories.forEach(story => createTestplaneTests(story, opts));
 }
 
-function createTestplaneTests(story: StorybookStoryExtended, { autoScreenshots }: TestplaneOpts): void {
+function createTestplaneTests(
+    story: StorybookStoryExtended,
+    { autoScreenshots, autoScreenshotStorybookGlobals }: TestplaneOpts,
+): void {
     nestedDescribe(story, () => {
+        const rawAutoScreenshotGlobalSets = {
+            ...autoScreenshotStorybookGlobals,
+            ...story.autoScreenshotStorybookGlobals,
+        };
+
+        const screenshotGlobalSetNames = Object.keys(rawAutoScreenshotGlobalSets);
+
+        const autoScreenshotGlobalSets = screenshotGlobalSetNames.length
+            ? screenshotGlobalSetNames.map(name => ({ name, globals: rawAutoScreenshotGlobalSets[name] }))
+            : [{ name: "", globals: {} }];
+
         if (autoScreenshots) {
-            extendedIt(story, "Autoscreenshot", async function (ctx: TestFunctionExtendedCtx) {
-                ctx.expect = globalThis.expect;
+            for (const { name, globals } of autoScreenshotGlobalSets) {
+                extendedIt(
+                    story,
+                    `Autoscreenshot${name ? ` ${name}` : ""}`,
+                    async function (ctx: TestFunctionExtendedCtx) {
+                        ctx.expect = globalThis.expect;
 
-                const result = await openStoryStep(ctx.browser, story);
+                        const result = await openStoryStep(ctx.browser, story, globals);
 
-                await autoScreenshotStep(ctx.browser, story.autoscreenshotSelector || result.rootSelector);
-            });
+                        await autoScreenshotStep(ctx.browser, story.autoscreenshotSelector || result.rootSelector);
+                    },
+                );
+            }
         }
 
         if (story.extraTests) {
@@ -45,8 +65,12 @@ function createTestplaneTests(story: StorybookStoryExtended, { autoScreenshots }
     });
 }
 
-async function openStoryStep(browser: WebdriverIO.Browser, story: StorybookStoryExtended): Promise<StoryLoadResult> {
-    return browser.runStep("@testplane/storybook: open story", () => openStory(browser, story));
+async function openStoryStep(
+    browser: WebdriverIO.Browser,
+    story: StorybookStoryExtended,
+    storybookGlobals: Record<string, unknown> = {},
+): Promise<StoryLoadResult> {
+    return browser.runStep("@testplane/storybook: open story", () => openStory(browser, story, storybookGlobals));
 }
 
 async function autoScreenshotStep(browser: WebdriverIO.Browser, rootSelector: string): Promise<void> {

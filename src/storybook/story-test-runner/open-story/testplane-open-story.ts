@@ -11,10 +11,19 @@ interface HTMLElement {
     innerText: string;
 }
 
-type StorybookWindow = Window &
+export type StorybookWindow = Window &
     typeof globalThis & {
-        __HERMIONE_OPEN_STORY__: (storyId: string, remountOnly: boolean, done: (result: string) => void) => void;
-        __STORYBOOK_ADDONS_CHANNEL__: EventEmitter;
+        __HERMIONE_OPEN_STORY__: (
+            storyId: string,
+            storybookGlobals: Record<string, unknown>,
+            remountOnly: boolean,
+            done: (result: string) => void,
+        ) => void;
+        __TESTPLANE_STORYBOOK_INITIAL_GLOBALS__?: Record<string, unknown>;
+        __STORYBOOK_PREVIEW__?: { storeInitializationPromise?: Promise<void> };
+        __STORYBOOK_ADDONS_CHANNEL__: EventEmitter & {
+            data?: { setGlobals?: Array<{ globals: Record<string, unknown> }> };
+        };
         __STORYBOOK_ADDON_INTERACTIONS_INSTRUMENTER_STATE__: Record<
             string,
             {
@@ -34,10 +43,11 @@ export async function inject(browser: WebdriverIO.Browser): Promise<void> {
 export async function execute(
     browser: WebdriverIO.Browser,
     storyId: string,
+    storybookGlobals: Record<string, unknown>,
     shouldRemount: boolean,
 ): Promise<StoryLoadResult> {
     const getResult = (): Promise<StoryLoadResult> =>
-        browser.executeAsync(executeOpenStoryScript, storyId, shouldRemount).then(JSON.parse);
+        browser.executeAsync(executeOpenStoryScript, storyId, storybookGlobals, shouldRemount).then(JSON.parse);
 
     const result: StoryLoadResult = await getResult();
 
@@ -58,7 +68,12 @@ export async function execute(
 
 export default { inject, execute };
 
-function openStoryScript(storyId: string, shouldRemount: boolean, done: (result: string) => void): void {
+function openStoryScript(
+    storyId: string,
+    storybookGlobals: Record<string, unknown>,
+    shouldRemount: boolean,
+    done: (result: string) => void,
+): void {
     function onPageLoad(fn: () => void): void {
         if (document.readyState === "complete") {
             fn();
@@ -81,6 +96,7 @@ function openStoryScript(storyId: string, shouldRemount: boolean, done: (result:
             channel.off("storyMissing", onStoryMissing);
             channel.off("storyThrewException", onStoryThrewException);
             channel.off("storyErrored", onStoryErrored);
+            channel.off("globalsUpdated", onGlobalsUpdated);
 
             done(JSON.stringify(value));
         }
@@ -140,23 +156,59 @@ function openStoryScript(storyId: string, shouldRemount: boolean, done: (result:
             doneJson(result);
         }
 
-        channel.once("playFunctionThrewException", onPlayFunctionThrewException);
-        channel.once("storyRendered", onStoryRendered);
-        channel.once("storyMissing", onStoryMissing);
-        channel.once("storyThrewException", onStoryThrewException);
-        channel.once("storyErrored", onStoryErrored);
+        function onGlobalsUpdated(): void {
+            channel.once("playFunctionThrewException", onPlayFunctionThrewException);
+            channel.once("storyRendered", onStoryRendered);
+            channel.once("storyMissing", onStoryMissing);
+            channel.once("storyThrewException", onStoryThrewException);
+            channel.once("storyErrored", onStoryErrored);
 
-        if (shouldRemount) {
-            channel.emit("setCurrentStory", { storyId: "" });
+            if (shouldRemount) {
+                channel.emit("setCurrentStory", { storyId: "" });
+            }
+
+            channel.emit("setCurrentStory", { storyId });
         }
 
-        channel.emit("setCurrentStory", { storyId });
+        if (!channel) {
+            result.loadError = "Couldn't find storybook channel. Looks like the opened page is not storybook preview";
+
+            doneJson(result);
+        }
+
+        const storybookPreview = (window as StorybookWindow).__STORYBOOK_PREVIEW__;
+        const isStorybookPreviewAvailable = storybookPreview && storybookPreview.storeInitializationPromise;
+        const shouldUpdateStorybookGlobals = storybookGlobals && isStorybookPreviewAvailable;
+
+        if (shouldUpdateStorybookGlobals) {
+            (storybookPreview.storeInitializationPromise as Promise<void>).then(function () {
+                let defaultGlobals = (window as StorybookWindow).__TESTPLANE_STORYBOOK_INITIAL_GLOBALS__;
+
+                if (!defaultGlobals) {
+                    const setGlobalCalls = (window as StorybookWindow).__STORYBOOK_ADDONS_CHANNEL__.data?.setGlobals;
+                    const initValue = (setGlobalCalls && setGlobalCalls[0].globals) || {};
+
+                    defaultGlobals = (window as StorybookWindow).__TESTPLANE_STORYBOOK_INITIAL_GLOBALS__ = initValue;
+                }
+
+                channel.once("globalsUpdated", onGlobalsUpdated);
+
+                channel.emit("updateGlobals", { globals: Object.assign({}, defaultGlobals, storybookGlobals) });
+            });
+        } else {
+            onGlobalsUpdated();
+        }
     });
 }
 
-function executeOpenStoryScript(storyId: string, remountOnly: boolean, done: (result: string) => void): void {
+function executeOpenStoryScript(
+    storyId: string,
+    storybookGlobals: Record<string, unknown>,
+    remountOnly: boolean,
+    done: (result: string) => void,
+): void {
     if ((window as StorybookWindow).__HERMIONE_OPEN_STORY__) {
-        (window as StorybookWindow).__HERMIONE_OPEN_STORY__(storyId, remountOnly, done);
+        (window as StorybookWindow).__HERMIONE_OPEN_STORY__(storyId, storybookGlobals, remountOnly, done);
     } else {
         done(JSON.stringify({ notInjected: true }));
     }

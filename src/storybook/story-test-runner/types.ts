@@ -8,6 +8,7 @@ export interface StorybookStoryExtended extends StorybookStory {
     browserIds: Array<string | RegExp> | null;
     extraTests?: Record<string, TestplaneTestFunction>;
     autoscreenshotSelector: string | null;
+    autoScreenshotStorybookGlobals: Record<string, Record<string, unknown>>;
 }
 
 export type ExecutionContextExtended = WebdriverIO.Browser["executionContext"] & {
