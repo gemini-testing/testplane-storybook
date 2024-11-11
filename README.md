@@ -57,7 +57,7 @@ Full plugin config:
 | enabled	                         | Boolean                                 | true                   | Enable / disable the plugin                                                                      |
 | storybookConfigDir                 | String                                  | ".storybook"           | Path to the storybook configuration directory                                                                   |
 | autoScreenshots	                 | Boolean                                 | true                   | Enable / disable auto-screenshot tests                                                                       |
-| autoScreenshotStorybookGlobals	 | Record<string, Record<string, unknown>> | {}                     | Run multiple auto-screenshot tests with different [storybook globals](https://storybook.js.org/docs/7/essentials/toolbars-and-globals#globals)                                                                       |
+| autoScreenshotStorybookGlobals	 | Record<string, Record<string, unknown>> | {}                     | Run multiple auto-screenshot tests with different [storybook globals](https://storybook.js.org/docs/7/essentials/toolbars-and-globals#globals). Only works with storybook >= 8                                                                       |
 | localport	                         | Number                                  | 6006                   | Port to launch storybook dev server on                                                                          |
 | remoteStorybookUrl                 | String                                  | ""                     | URL of the remote Storybook. If specified, local storybook dev sever would not be launched                             |
 | browserIds                         | Array<String \| RegExp>                 | []                     | Array of `browserId` to run storybook tests on. By default, all of browsers, specified in Testplane config would be used |
@@ -123,9 +123,7 @@ const meta: WithTestplane<Meta<typeof Button>> = {
         skip: false, // if true, skips all Testplane tests from this story file
         autoscreenshotSelector: ".my-selector", // Custom selector to auto-screenshot elements
         browserIds: ["chrome"], // Testplane browsers to run tests from this story file
-        autoScreenshotStorybookGlobals: {
-            // override default autoScreenshotStorybookGlobals options from plugin config
-            // tests for default autoScreenshotStorybookGlobals from plugin config won't be generated
+        autoScreenshotStorybookGlobals: { // overlay plugin config's autoScreenshotStorybookGlobals options
             "es locale": { locale: "es" },
             "fr locale": { locale: "fr" }
         },
