@@ -5,6 +5,7 @@ import { StorybookStoryExtended } from "../get-stories";
 
 export interface TestplaneOpts {
     autoScreenshots: boolean;
+    autoscreenshotSelector: string;
     autoScreenshotStorybookGlobals: Record<string, Record<string, unknown>>;
 }
 

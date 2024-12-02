@@ -77,6 +77,7 @@ export interface PluginConfig {
     enabled: boolean;
     storybookConfigDir: string;
     autoScreenshots: boolean;
+    autoscreenshotSelector: string;
     autoScreenshotStorybookGlobals: Record<string, Record<string, unknown>>;
     localport: number;
     remoteStorybookUrl: string;
@@ -94,6 +95,7 @@ export function parseConfig(options: PluginPartialConfig): PluginConfig {
             enabled: booleanOption("enabled", true),
             storybookConfigDir: stringOption("storybookConfigDir", ".storybook"),
             autoScreenshots: booleanOption("autoScreenshots", true),
+            autoscreenshotSelector: stringOption("autoscreenshotSelector", ""),
             autoScreenshotStorybookGlobals: optionalRecordOfRecordsOption("autoScreenshotStorybookGlobals", {}),
             localport: numberOption("localport", 6006),
             remoteStorybookUrl: stringOption("remoteStorybookUrl", ""),

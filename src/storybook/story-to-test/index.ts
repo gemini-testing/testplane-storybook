@@ -3,14 +3,11 @@ import os from "os";
 import fs from "fs-extra";
 import _ from "lodash";
 import type { Test } from "testplane";
-import { writeStoryTestsFile } from "./write-tests-file";
+import { writeStoryTestsFile, TestplaneOpts } from "./write-tests-file";
 import { STORYBOOK_TEST_DIRNAME } from "../../constants";
 import type { StorybookStoryExtended } from "../get-stories";
 
-export interface TestplaneOpts {
-    autoScreenshots: boolean;
-    autoScreenshotStorybookGlobals: Record<string, Record<string, unknown>>;
-}
+export type { TestplaneOpts };
 
 const testplaneTestNameSuffix = ".testplane.js";
 

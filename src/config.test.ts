@@ -19,6 +19,8 @@ describe("config", () => {
             enabled: false,
             storybookConfigDir: "custom-dir",
             autoScreenshots: false,
+            autoscreenshotSelector: "foobar",
+            autoScreenshotStorybookGlobals: { default: { theme: "dark" } },
             localport: 1234,
             remoteStorybookUrl: "http://localhost:3000",
             browserIds: ["chrome", "firefox"],
