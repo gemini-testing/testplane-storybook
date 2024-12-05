@@ -18,7 +18,7 @@ export function run(stories: StorybookStory[], opts: TestplaneOpts): void {
 
 function createTestplaneTests(
     story: StorybookStoryExtended,
-    { autoScreenshots, autoScreenshotStorybookGlobals }: TestplaneOpts,
+    { autoScreenshots, autoscreenshotSelector, autoScreenshotStorybookGlobals }: TestplaneOpts,
 ): void {
     nestedDescribe(story, () => {
         const rawAutoScreenshotGlobalSets = {
@@ -41,8 +41,9 @@ function createTestplaneTests(
                         ctx.expect = globalThis.expect;
 
                         const result = await openStoryStep(ctx.browser, story, globals);
+                        const selector = story.autoscreenshotSelector || autoscreenshotSelector || result.rootSelector;
 
-                        await autoScreenshotStep(ctx.browser, story.autoscreenshotSelector || result.rootSelector);
+                        await autoScreenshotStep(ctx.browser, selector);
                     },
                 );
             }

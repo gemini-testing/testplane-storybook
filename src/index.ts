@@ -80,6 +80,7 @@ function onTestplaneMaster(testplane: Testplane, config: PluginConfig): void {
 
         const storyTestFiles = await buildStoryTestFiles(stories, {
             autoScreenshots: config.autoScreenshots,
+            autoscreenshotSelector: config.autoscreenshotSelector,
             autoScreenshotStorybookGlobals: config.autoScreenshotStorybookGlobals,
         });
 

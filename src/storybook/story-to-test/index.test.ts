@@ -14,6 +14,7 @@ describe("storybook/story-to-test", () => {
 
         const storyTestFiles = await buildStoryTestFiles([story], {
             autoScreenshots: true,
+            autoscreenshotSelector: "foobar",
             autoScreenshotStorybookGlobals: {},
         });
 
@@ -21,7 +22,11 @@ describe("storybook/story-to-test", () => {
     });
 
     it("should empty tests dir before writing tests", async () => {
-        await buildStoryTestFiles([], { autoScreenshots: true, autoScreenshotStorybookGlobals: {} });
+        await buildStoryTestFiles([], {
+            autoScreenshots: true,
+            autoscreenshotSelector: "foobar",
+            autoScreenshotStorybookGlobals: {},
+        });
 
         expect(fs.emptyDir).toBeCalled();
     });
@@ -30,22 +35,24 @@ describe("storybook/story-to-test", () => {
         jest.spyOn(path, "resolve").mockImplementation((_, storyPath) => storyPath);
         const storyFirst = { importPath: "./story/path/story-first.js" } as StorybookStoryExtended;
         const storySecond = { importPath: "./story/path/story-second.js" } as StorybookStoryExtended;
-
-        const storyTestFiles = await buildStoryTestFiles([storyFirst, storySecond], {
+        const opts = {
             autoScreenshots: true,
+            autoscreenshotSelector: "foobar",
             autoScreenshotStorybookGlobals: { foo: { bar: "baz" } },
-        });
+        };
+
+        const storyTestFiles = await buildStoryTestFiles([storyFirst, storySecond], opts);
 
         expect(writeStoryTestsFile).toBeCalledWith({
             testFile: "./story/path/story-first.js.testplane.js",
-            opts: { autoScreenshots: true, autoScreenshotStorybookGlobals: { foo: { bar: "baz" } } },
             stories: [storyFirst],
+            opts,
         });
 
         expect(writeStoryTestsFile).toBeCalledWith({
             testFile: "./story/path/story-second.js.testplane.js",
-            opts: { autoScreenshots: true, autoScreenshotStorybookGlobals: { foo: { bar: "baz" } } },
             stories: [storySecond],
+            opts,
         });
 
         expect(storyTestFiles).toEqual([

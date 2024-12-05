@@ -13,22 +13,29 @@ jest.mock("fs-extra", () => ({
 
 describe("storybook/story-to-test/write-tests-file", () => {
     it("should write test file with correct content", async () => {
-        const opts = { autoScreenshots: true, autoScreenshotStorybookGlobals: { foo: { bar: "baz" } } };
         const stories = [{ id: "foo" }, { id: "bar" }] as StorybookStoryExtended[];
+        const storyTestRunnerPath = "/absolute/story/runner/path";
+        const testplaneOpts = {
+            autoScreenshots: true,
+            autoscreenshotSelector: ".foobar",
+            autoScreenshotStorybookGlobals: { foo: { bar: "baz" } },
+        };
+
         const testFile = "/absolute/test/path/file.testplane.js";
+
         const expectedContents = `
-const stories = [{"id":"foo"},{"id":"bar"}];
-const storyTestRunnerPath = "/absolute/story/runner/path";
-const testplaneOpts = {"autoScreenshots":true,"autoScreenshotStorybookGlobals":{"foo":{"bar":"baz"}}};
+const stories = ${JSON.stringify(stories)};
+const storyTestRunnerPath = ${JSON.stringify(storyTestRunnerPath)};
+const testplaneOpts = ${JSON.stringify(testplaneOpts)};
 
 require(storyTestRunnerPath).run(stories, testplaneOpts);
 `;
-        jest.mocked(getStoryRunnerAbsoluteFilePath).mockReturnValue("/absolute/story/runner/path");
+        jest.mocked(getStoryRunnerAbsoluteFilePath).mockReturnValue(storyTestRunnerPath);
 
         await writeStoryTestsFile({
             testFile,
             stories,
-            opts,
+            opts: testplaneOpts,
         });
 
         expect(getStoryRunnerAbsoluteFilePath).toHaveBeenCalled();
