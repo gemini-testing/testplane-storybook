@@ -75,7 +75,9 @@ async function openStoryStep(
 }
 
 async function autoScreenshotStep(browser: WebdriverIO.Browser, rootSelector: string): Promise<void> {
-    await browser.runStep("@testplane/storybook: autoscreenshot", () => browser.assertView("plain", rootSelector));
+    await browser.runStep(`@testplane/storybook: autoscreenshot "${rootSelector}"`, () =>
+        browser.assertView("plain", rootSelector),
+    );
 }
 
 async function clearSessionStep(browser: WebdriverIO.Browser): Promise<void> {
