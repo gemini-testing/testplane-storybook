@@ -10,6 +10,7 @@ export function getAbsoluteFilePath(): string {
     return __filename;
 }
 
+// Those stories must be from a single story file
 export function run(stories: StorybookStory[], opts: TestplaneOpts): void {
     const withStoryFileDataStories = extendStoriesFromStoryFile(stories);
 
@@ -32,7 +33,7 @@ function createTestplaneTests(
             ? screenshotGlobalSetNames.map(name => ({ name, globals: rawAutoScreenshotGlobalSets[name] }))
             : [{ name: "", globals: {} }];
 
-        if (autoScreenshots) {
+        if (story.autoScreenshots ?? autoScreenshots) {
             for (const { name, globals } of autoScreenshotGlobalSets) {
                 extendedIt(
                     story,

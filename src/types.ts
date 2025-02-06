@@ -11,23 +11,34 @@ interface StorybookMetaConfig {
     component?: unknown;
 }
 
-interface CustomField<K> {
-    testplane?: K;
-}
-
 type Combined<N, B = void> = B extends void ? N : N & B;
 
+type TestplaneStoryFileConfig = {
+    skip?: boolean;
+    assertViewOpts?: AssertViewOpts;
+    browserIds?: Array<string | RegExp>;
+    autoScreenshots?: boolean;
+    autoscreenshotSelector?: string;
+    autoScreenshotStorybookGlobals?: Record<string, Record<string, unknown>>;
+};
+
 export type TestplaneMetaConfig<T = void> = Combined<
-    CustomField<{
-        skip?: boolean;
-        assertViewOpts?: AssertViewOpts;
-        browserIds?: Array<string | RegExp>;
-        autoscreenshotSelector?: string;
-        autoScreenshotStorybookGlobals?: Record<string, Record<string, unknown>>;
-    }>,
+    {
+        /**
+         * @deprecated Use "testplaneConfig" instead of "testplane"
+         */
+        testplane?: TestplaneStoryFileConfig;
+        testplaneConfig?: TestplaneStoryFileConfig;
+    },
     T
 >;
 
-export type TestplaneStoryConfig<T = void> = Combined<CustomField<Record<string, TestplaneTestFunction>>, T>;
+export type TestplaneStoryConfig<T = void> = Combined<
+    {
+        testplane?: Record<string, TestplaneTestFunction>;
+        testplaneConfig?: TestplaneStoryFileConfig;
+    },
+    T
+>;
 
 export type WithTestplane<T = void> = T extends StorybookMetaConfig ? TestplaneMetaConfig<T> : TestplaneStoryConfig<T>;

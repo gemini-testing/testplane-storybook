@@ -1,6 +1,6 @@
 import TypedModule from "module";
 import type { TestplaneMetaConfig, TestplaneStoryConfig } from "../../types";
-import type { StorybookStory, StorybookStoryExtended } from "./types";
+import type { StorybookStory, StorybookStoryExtraProperties, StorybookStoryExtended } from "./types";
 
 const Module = TypedModule as any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -12,45 +12,62 @@ type StoryFile = { default: TestplaneMetaConfig } & Record<string, TestplaneStor
 
 let loggedStoryFileRequireError = Boolean(process.env.TESTPLANE_STORYBOOK_DISABLE_STORY_REQUIRE_WARNING);
 
-export function extendStoriesFromStoryFile(stories: StorybookStory[]): StorybookStoryExtended[] {
+export function extendStoriesFromStoryFile(
+    stories: StorybookStory[],
+    { requireFn = require } = {},
+): StorybookStoryExtended[] {
     const storiesMap = getStoriesMap(stories);
     const storyPath = stories[0].absolutePath;
-    const storyFile = getStoryFile(storyPath);
+    const storyFile = getStoryFile(storyPath, { requireFn });
     const withStoryFileExtendedStories = stories as StorybookStoryExtended[];
 
-    if (!storyFile) {
-        return withStoryFileExtendedStories.map(story => {
-            story.skip = false;
-            story.assertViewOpts = {};
-            story.browserIds = null;
-            story.autoScreenshotStorybookGlobals = {};
+    const storyExtendedBaseConfig = {
+        skip: false,
+        browserIds: null,
+        assertViewOpts: {},
+        autoScreenshots: null,
+        autoscreenshotSelector: null,
+        autoScreenshotStorybookGlobals: {},
+        extraTests: null,
+    } satisfies StorybookStoryExtraProperties;
 
-            return story;
-        });
+    if (!storyFile) {
+        return withStoryFileExtendedStories.map(story => Object.assign(story, storyExtendedBaseConfig));
     }
 
-    for (const storyName in storyFile) {
+    const storyTestplaneDefaultConfigs = storyFile.default?.testplaneConfig || storyFile.default?.testplane || {};
+
+    for (const storyName of Object.keys(storyFile)) {
         if (storyName === "default") {
-            withStoryFileExtendedStories.forEach(story => {
-                const testplaneStoryOpts = storyFile[storyName].testplane || {};
-
-                story.skip = testplaneStoryOpts.skip || false;
-                story.assertViewOpts = testplaneStoryOpts.assertViewOpts || {};
-                story.browserIds = testplaneStoryOpts.browserIds || null;
-                story.autoscreenshotSelector = testplaneStoryOpts.autoscreenshotSelector || null;
-                story.autoScreenshotStorybookGlobals = testplaneStoryOpts.autoScreenshotStorybookGlobals || {};
-            });
-
             continue;
         }
 
         const storyMapKey = getStoryNameId(storyName);
 
-        if (storiesMap.has(storyMapKey) && storyFile[storyName].testplane) {
-            const story = storiesMap.get(storyMapKey) as StorybookStoryExtended;
-
-            story.extraTests = storyFile[storyName].testplane;
+        if (!storiesMap.has(storyMapKey)) {
+            continue;
         }
+
+        const storyTestlaneConfigs = storyFile[storyName].testplaneConfig || {};
+        const story = storiesMap.get(storyMapKey) as StorybookStoryExtended;
+
+        Object.assign(story, storyExtendedBaseConfig, storyTestplaneDefaultConfigs, storyTestlaneConfigs, {
+            extraTests: storyFile[storyName].testplane || null,
+        });
+
+        story.assertViewOpts = Object.assign(
+            {},
+            storyExtendedBaseConfig.assertViewOpts,
+            storyTestplaneDefaultConfigs.assertViewOpts,
+            storyTestlaneConfigs.assertViewOpts,
+        );
+
+        story.autoScreenshotStorybookGlobals = Object.assign(
+            {},
+            storyExtendedBaseConfig.autoScreenshotStorybookGlobals,
+            storyTestplaneDefaultConfigs.autoScreenshotStorybookGlobals,
+            storyTestlaneConfigs.autoScreenshotStorybookGlobals,
+        );
     }
 
     return withStoryFileExtendedStories;
@@ -74,13 +91,13 @@ function getStoryNameId(storyName: string): string {
     return storyName.replace(nonAsciiWordRegExp, "").toLowerCase();
 }
 
-function getStoryFile(storyPath: string): StoryFile | null {
+function getStoryFile(storyPath: string, { requireFn = require } = {}): StoryFile | null {
     const unmockFn = mockLoaders({ except: storyPath });
 
     let storyFile;
 
     try {
-        storyFile = require(storyPath); // eslint-disable-line @typescript-eslint/no-var-requires
+        storyFile = requireFn(storyPath);
     } catch (error) {
         if (!loggedStoryFileRequireError) {
             loggedStoryFileRequireError = true;

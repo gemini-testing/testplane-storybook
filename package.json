@@ -54,7 +54,7 @@
         "eslint-config-gemini-testing": "^3.0.0",
         "jest": "^27.5.1",
         "jest-extended": "^0.11.5",
-        "prettier": "^2.3.2",
+        "prettier": "^3.4.2",
         "rimraf": "^3.0.2",
         "testplane": "^0.1.0-rc.0",
         "ts-jest": "^27.1.5",
