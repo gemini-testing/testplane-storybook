@@ -1,4 +1,5 @@
 import TypedModule from "module";
+import { extractInheritedValue, inheritValue } from "./inheritable-values";
 import type { TestplaneMetaConfig, TestplaneStoryConfig } from "../../types";
 import type { StorybookStory, StorybookStoryExtraProperties, StorybookStoryExtended } from "./types";
 
@@ -55,19 +56,17 @@ export function extendStoriesFromStoryFile(
             extraTests: storyFile[storyName].testplane || null,
         });
 
-        story.assertViewOpts = Object.assign(
-            {},
+        story.assertViewOpts = extractInheritedValue(
+            inheritValue(storyTestplaneDefaultConfigs.assertViewOpts, storyTestlaneConfigs.assertViewOpts),
             storyExtendedBaseConfig.assertViewOpts,
-            storyTestplaneDefaultConfigs.assertViewOpts,
-            storyTestlaneConfigs.assertViewOpts,
         );
 
-        story.autoScreenshotStorybookGlobals = Object.assign(
-            {},
-            storyExtendedBaseConfig.autoScreenshotStorybookGlobals,
-            storyTestplaneDefaultConfigs.autoScreenshotStorybookGlobals,
-            storyTestlaneConfigs.autoScreenshotStorybookGlobals,
-        );
+        story.autoScreenshotStorybookGlobals =
+            inheritValue(
+                storyExtendedBaseConfig.autoScreenshotStorybookGlobals,
+                storyTestplaneDefaultConfigs.autoScreenshotStorybookGlobals,
+                storyTestlaneConfigs.autoScreenshotStorybookGlobals,
+            ) || {};
     }
 
     return withStoryFileExtendedStories;

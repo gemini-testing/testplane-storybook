@@ -1,18 +1,23 @@
 import type { AssertViewOpts } from "testplane";
 import type { TestplaneTestFunction } from "../../types";
 import type { StorybookStoryExtended as StorybookStory } from "../get-stories";
+import type { Inheritable } from "./inheritable-values";
+
+export type AutoScreenshotStorybookGlobals = Record<string, Record<string, unknown>>;
 
 export interface StorybookStoryExtraProperties {
     skip: boolean;
-    assertViewOpts: AssertViewOpts;
+    assertViewOpts: Inheritable<AssertViewOpts>;
     browserIds: Array<string | RegExp> | null;
     extraTests: Record<string, TestplaneTestFunction> | null;
     autoScreenshots: boolean | null;
     autoscreenshotSelector: string | null;
-    autoScreenshotStorybookGlobals: Record<string, Record<string, unknown>>;
+    autoScreenshotStorybookGlobals: Inheritable<AutoScreenshotStorybookGlobals>;
 }
 
-export interface StorybookStoryExtended extends StorybookStory, StorybookStoryExtraProperties {}
+export interface StorybookStoryExtended extends StorybookStory, Omit<StorybookStoryExtraProperties, "assertViewOpts"> {
+    assertViewOpts: AssertViewOpts;
+}
 
 export type ExecutionContextExtended = WebdriverIO.Browser["executionContext"] & {
     "@testplane/storybook-assertView-opts": AssertViewOpts;

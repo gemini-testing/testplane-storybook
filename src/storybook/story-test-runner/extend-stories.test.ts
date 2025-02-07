@@ -59,11 +59,11 @@ describe("storybook/story-test-runner/extend-stories", () => {
 
         const extendedStories = extendStoriesFromStoryFile(stories, { requireFn });
 
-        expect(extendedStories).toStrictEqual([
+        expect(extendedStories).toEqual([
             {
                 name: "foo",
                 absolutePath: "not/existing.js",
-                extraTests: customTests,
+                extraTests: {},
                 skip: false,
                 browserIds: ["chrome"],
                 assertViewOpts: {

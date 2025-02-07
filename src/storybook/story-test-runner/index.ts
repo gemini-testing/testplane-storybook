@@ -5,6 +5,7 @@ import type { StoryLoadResult } from "./open-story/testplane-open-story";
 import type { TestplaneOpts } from "../story-to-test";
 import type { TestFunctionExtendedCtx } from "../../types";
 import type { StorybookStoryExtended, StorybookStory } from "./types";
+import { extractInheritedValue } from "./inheritable-values";
 
 export function getAbsoluteFilePath(): string {
     return __filename;
@@ -22,11 +23,10 @@ function createTestplaneTests(
     { autoScreenshots, autoscreenshotSelector, autoScreenshotStorybookGlobals }: TestplaneOpts,
 ): void {
     nestedDescribe(story, () => {
-        const rawAutoScreenshotGlobalSets = {
-            ...autoScreenshotStorybookGlobals,
-            ...story.autoScreenshotStorybookGlobals,
-        };
-
+        const rawAutoScreenshotGlobalSets = extractInheritedValue(
+            story.autoScreenshotStorybookGlobals,
+            autoScreenshotStorybookGlobals,
+        );
         const screenshotGlobalSetNames = Object.keys(rawAutoScreenshotGlobalSets);
 
         const autoScreenshotGlobalSets = screenshotGlobalSetNames.length

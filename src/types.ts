@@ -1,4 +1,6 @@
 import type { AssertViewOpts } from "testplane";
+import type { AutoScreenshotStorybookGlobals } from "./storybook/story-test-runner/types";
+import type { Inheritable } from "./storybook/story-test-runner/inheritable-values";
 
 export type TestFunctionExtendedCtx = TestFunctionCtx & { expect: ExpectWebdriverIO.Expect };
 
@@ -15,11 +17,11 @@ type Combined<N, B = void> = B extends void ? N : N & B;
 
 type TestplaneStoryFileConfig = {
     skip?: boolean;
-    assertViewOpts?: AssertViewOpts;
+    assertViewOpts?: Inheritable<AssertViewOpts>;
     browserIds?: Array<string | RegExp>;
     autoScreenshots?: boolean;
     autoscreenshotSelector?: string;
-    autoScreenshotStorybookGlobals?: Record<string, Record<string, unknown>>;
+    autoScreenshotStorybookGlobals?: Inheritable<AutoScreenshotStorybookGlobals>;
 };
 
 export type TestplaneMetaConfig<T = void> = Combined<
