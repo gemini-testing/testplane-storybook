@@ -27,7 +27,10 @@ function createTestplaneTests(
             story.autoScreenshotStorybookGlobals,
             autoScreenshotStorybookGlobals,
         );
-        const screenshotGlobalSetNames = Object.keys(rawAutoScreenshotGlobalSets);
+
+        const screenshotGlobalSetNames = Object.keys(rawAutoScreenshotGlobalSets).filter(name =>
+            Boolean(rawAutoScreenshotGlobalSets[name]),
+        );
 
         const autoScreenshotGlobalSets = screenshotGlobalSetNames.length
             ? screenshotGlobalSetNames.map(name => ({ name, globals: rawAutoScreenshotGlobalSets[name] }))
@@ -41,7 +44,7 @@ function createTestplaneTests(
                     async function (ctx: TestFunctionExtendedCtx) {
                         ctx.expect = globalThis.expect;
 
-                        const result = await openStoryStep(ctx.browser, story, globals);
+                        const result = await openStoryStep(ctx.browser, story, globals as Record<string, unknown>);
                         const selector = story.autoscreenshotSelector || autoscreenshotSelector || result.rootSelector;
 
                         await autoScreenshotStep(ctx.browser, selector);
