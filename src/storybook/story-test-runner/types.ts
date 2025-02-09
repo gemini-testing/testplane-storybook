@@ -3,7 +3,7 @@ import type { TestplaneTestFunction } from "../../types";
 import type { StorybookStoryExtended as StorybookStory } from "../get-stories";
 import type { Inheritable } from "./inheritable-values";
 
-export type AutoScreenshotStorybookGlobals = Record<string, Record<string, unknown>>;
+export type AutoScreenshotStorybookGlobals = Record<string, null | Record<string, unknown>>;
 
 export interface StorybookStoryExtraProperties {
     skip: boolean;

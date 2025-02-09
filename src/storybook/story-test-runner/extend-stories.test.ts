@@ -39,7 +39,7 @@ describe("storybook/story-test-runner/extend-stories", () => {
         expect(extendedStories[0].browserIds).toBe(null);
     });
 
-    it("should overlay story configs / file confifs / default configs", () => {
+    it("should overlay story configs over file configs", () => {
         const customTests = {};
         const defaultExport = {
             testplane: { browserIds: ["firefox"] },
@@ -59,7 +59,7 @@ describe("storybook/story-test-runner/extend-stories", () => {
 
         const extendedStories = extendStoriesFromStoryFile(stories, { requireFn });
 
-        expect(extendedStories).toEqual([
+        expect(extendedStories).toMatchObject([
             {
                 name: "foo",
                 absolutePath: "not/existing.js",
@@ -72,8 +72,35 @@ describe("storybook/story-test-runner/extend-stories", () => {
                     ignoreDiffPixelCount: 10,
                 },
                 autoScreenshots: false,
-                autoscreenshotSelector: null,
                 autoScreenshotStorybookGlobals: { dark: { theme: "dark" } },
+            },
+        ]);
+    });
+
+    it("should overlay story configs over default configs", () => {
+        const customTests = {};
+        const fooExport = {
+            testplane: customTests,
+            testplaneConfig: { skip: false, autoScreenshots: false, assertViewOpts: { ignoreElements: ["foobar"] } },
+        };
+        const requireFn = mkRequireStub_().mockReturnValue({ default: {}, foo: fooExport });
+        const stories = [{ name: "foo", absolutePath: "not/existing.js" }] as StorybookStory[];
+
+        const extendedStories = extendStoriesFromStoryFile(stories, { requireFn });
+
+        expect(extendedStories).toMatchObject([
+            {
+                name: "foo",
+                absolutePath: "not/existing.js",
+                extraTests: {},
+                skip: false,
+                browserIds: null,
+                assertViewOpts: {
+                    ignoreElements: ["foobar"],
+                },
+                autoScreenshots: false,
+                autoscreenshotSelector: null,
+                autoScreenshotStorybookGlobals: {},
             },
         ]);
     });

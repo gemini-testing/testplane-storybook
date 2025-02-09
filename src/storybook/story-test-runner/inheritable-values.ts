@@ -1,6 +1,9 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Inheritable<T extends Record<any, any>> = T | ((baseValue: T) => T);
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const isFunc = (obj?: unknown): obj is (...args: any[]) => any => typeof obj === "function";
+
 // Acts like "Object.assign", but:
 // - Does not mutate arguments
 // - Supports functions (previousValue) => nextValue
@@ -22,13 +25,13 @@ export function inheritValue<T extends Record<any, any>>(
             resultValue = curValue;
         }
 
-        if (typeof prevValue !== "function" && typeof curValue !== "function") {
+        if (!isFunc(prevValue) && !isFunc(curValue)) {
             resultValue = Object.assign({}, prevValue, curValue);
-        } else if (typeof prevValue === "function" && typeof curValue === "function") {
+        } else if (isFunc(prevValue) && isFunc(curValue)) {
             resultValue = (baseValue: T) => curValue(prevValue(structuredClone(baseValue)));
-        } else if (typeof prevValue === "function" && typeof curValue !== "function") {
+        } else if (isFunc(prevValue) && !isFunc(curValue)) {
             resultValue = (baseValue: T) => Object.assign({}, prevValue(structuredClone(baseValue)), curValue);
-        } else if (typeof prevValue !== "function" && typeof curValue === "function") {
+        } else if (!isFunc(prevValue) && isFunc(curValue)) {
             resultValue = (baseValue: T) => curValue(structuredClone(Object.assign({}, baseValue, prevValue)));
         }
     }
