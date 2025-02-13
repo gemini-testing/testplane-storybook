@@ -23,7 +23,6 @@ export async function openStory(
         const storybookIframeUrl = await getStorybookIframeUrl(browser);
 
         await browser.runStep("open storybook url", () => browser.url(storybookIframeUrl));
-        await browser.runStep("inject script", () => testplaneOpenStory.inject(browser));
     }
 
     await extendBrowserMeta(browser, story);
