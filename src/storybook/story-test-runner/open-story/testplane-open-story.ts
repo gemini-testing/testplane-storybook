@@ -4,7 +4,6 @@ export interface StoryLoadResult {
     rootSelector: string;
     playFunctionError?: string;
     loadError?: string;
-    notInjected?: true;
 }
 
 interface HTMLElement {
@@ -13,12 +12,6 @@ interface HTMLElement {
 
 export type StorybookWindow = Window &
     typeof globalThis & {
-        __HERMIONE_OPEN_STORY__: (
-            storyId: string,
-            storybookGlobals: Record<string, unknown>,
-            remountOnly: boolean,
-            done: (result: string) => void,
-        ) => void;
         __TESTPLANE_STORYBOOK_INITIAL_GLOBALS__?: Record<string, unknown>;
         __STORYBOOK_PREVIEW__?: { storeInitializationPromise?: Promise<void> };
         __STORYBOOK_ADDONS_CHANNEL__: EventEmitter & {
@@ -35,38 +28,6 @@ export type StorybookWindow = Window &
             }
         >;
     };
-
-export async function inject(browser: WebdriverIO.Browser): Promise<void> {
-    await browser.execute(`window.__HERMIONE_OPEN_STORY__ = ${openStoryScript.toString()}`);
-}
-
-export async function execute(
-    browser: WebdriverIO.Browser,
-    storyId: string,
-    storybookGlobals: Record<string, unknown>,
-    shouldRemount: boolean,
-): Promise<StoryLoadResult> {
-    const getResult = (): Promise<StoryLoadResult> =>
-        browser.executeAsync(executeOpenStoryScript, storyId, storybookGlobals, shouldRemount).then(JSON.parse);
-
-    const result: StoryLoadResult = await getResult();
-
-    if (!result.notInjected) {
-        return result;
-    }
-
-    await inject(browser);
-
-    const retriedResult = await getResult();
-
-    if (retriedResult.notInjected) {
-        throw new Error("Can't inject client script");
-    }
-
-    return retriedResult;
-}
-
-export default { inject, execute };
 
 function openStoryScript(
     storyId: string,
@@ -201,15 +162,18 @@ function openStoryScript(
     });
 }
 
-function executeOpenStoryScript(
+export async function execute(
+    browser: WebdriverIO.Browser,
     storyId: string,
     storybookGlobals: Record<string, unknown>,
-    remountOnly: boolean,
-    done: (result: string) => void,
-): void {
-    if ((window as StorybookWindow).__HERMIONE_OPEN_STORY__) {
-        (window as StorybookWindow).__HERMIONE_OPEN_STORY__(storyId, storybookGlobals, remountOnly, done);
-    } else {
-        done(JSON.stringify({ notInjected: true }));
-    }
+    shouldRemount: boolean,
+): Promise<StoryLoadResult> {
+    const getResult = ({ disableRemount = false } = {}): Promise<StoryLoadResult> =>
+        browser
+            .executeAsync(openStoryScript, storyId, storybookGlobals, shouldRemount && !disableRemount)
+            .then(JSON.parse);
+
+    return getResult().catch(() => getResult({ disableRemount: true }));
 }
+
+export default { execute };
