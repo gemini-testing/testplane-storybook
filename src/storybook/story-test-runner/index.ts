@@ -5,11 +5,13 @@ import type { StoryLoadResult } from "./open-story/testplane-open-story";
 import type { TestplaneOpts } from "../story-to-test";
 import type { TestFunctionExtendedCtx } from "../../types";
 import type { StorybookStoryExtended, StorybookStory } from "./types";
+import { extractInheritedValue } from "./inheritable-values";
 
 export function getAbsoluteFilePath(): string {
     return __filename;
 }
 
+// Those stories must be from a single story file
 export function run(stories: StorybookStory[], opts: TestplaneOpts): void {
     const withStoryFileDataStories = extendStoriesFromStoryFile(stories);
 
@@ -21,18 +23,20 @@ function createTestplaneTests(
     { autoScreenshots, autoscreenshotSelector, autoScreenshotStorybookGlobals }: TestplaneOpts,
 ): void {
     nestedDescribe(story, () => {
-        const rawAutoScreenshotGlobalSets = {
-            ...autoScreenshotStorybookGlobals,
-            ...story.autoScreenshotStorybookGlobals,
-        };
+        const rawAutoScreenshotGlobalSets = extractInheritedValue(
+            story.autoScreenshotStorybookGlobals,
+            autoScreenshotStorybookGlobals,
+        );
 
-        const screenshotGlobalSetNames = Object.keys(rawAutoScreenshotGlobalSets);
+        const screenshotGlobalSetNames = Object.keys(rawAutoScreenshotGlobalSets).filter(name =>
+            Boolean(rawAutoScreenshotGlobalSets[name]),
+        );
 
         const autoScreenshotGlobalSets = screenshotGlobalSetNames.length
             ? screenshotGlobalSetNames.map(name => ({ name, globals: rawAutoScreenshotGlobalSets[name] }))
             : [{ name: "", globals: {} }];
 
-        if (autoScreenshots) {
+        if (story.autoScreenshots ?? autoScreenshots) {
             for (const { name, globals } of autoScreenshotGlobalSets) {
                 extendedIt(
                     story,
@@ -40,7 +44,7 @@ function createTestplaneTests(
                     async function (ctx: TestFunctionExtendedCtx) {
                         ctx.expect = globalThis.expect;
 
-                        const result = await openStoryStep(ctx.browser, story, globals);
+                        const result = await openStoryStep(ctx.browser, story, globals as Record<string, unknown>);
                         const selector = story.autoscreenshotSelector || autoscreenshotSelector || result.rootSelector;
 
                         await autoScreenshotStep(ctx.browser, selector);

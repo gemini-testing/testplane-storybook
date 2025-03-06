@@ -1,8 +1,10 @@
+/** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
     clearMocks: true,
     globals: {
         "ts-jest": {
-            "tsconfig": "tsconfig.spec.json",
+            tsconfig: "tsconfig.spec.json",
+            isolatedModules: true,
         },
     },
     preset: "ts-jest",
