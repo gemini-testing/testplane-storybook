@@ -4,6 +4,8 @@ import type { TestplaneMetaConfig, TestplaneStoryConfig } from "../../types";
 import type { StorybookStory, StorybookStoryExtraProperties, StorybookStoryExtended } from "./types";
 
 const Module = TypedModule as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+const MockedModuleProxySymbol = Symbol("@testplane/storybook:mocked-module-proxy");
+type MockedModuleProxy = { [MockedModuleProxySymbol]?: boolean };
 
 interface ImportingModule {
     _compile: (code: string, fileName: string) => unknown;
@@ -49,11 +51,12 @@ export function extendStoriesFromStoryFile(
             continue;
         }
 
-        const storyTestlaneConfigs = storyFile[storyName].testplaneConfig || {};
+        const storyContents = removeNestedMockedPropertiesPaths(storyFile[storyName]);
+        const storyTestlaneConfigs = storyContents.testplaneConfig || {};
         const story = storiesMap.get(storyMapKey) as StorybookStoryExtended;
 
         Object.assign(story, storyExtendedBaseConfig, storyTestplaneDefaultConfigs, storyTestlaneConfigs, {
-            extraTests: storyFile[storyName].testplane || null,
+            extraTests: storyContents.testplane || null,
         });
 
         story.assertViewOpts = extractInheritedValue(
@@ -67,6 +70,17 @@ export function extendStoriesFromStoryFile(
                 storyTestplaneDefaultConfigs.autoScreenshotStorybookGlobals,
                 storyTestlaneConfigs.autoScreenshotStorybookGlobals,
             ) || {};
+    }
+
+    for (const story of withStoryFileExtendedStories) {
+        for (const essentialProperty in storyExtendedBaseConfig) {
+            if (!Object.hasOwn(story, essentialProperty)) {
+                Object.assign(story, {
+                    [essentialProperty]:
+                        storyExtendedBaseConfig[essentialProperty as keyof StorybookStoryExtraProperties],
+                });
+            }
+        }
     }
 
     return withStoryFileExtendedStories;
@@ -92,6 +106,10 @@ function getStoryNameId(storyName: string): string {
 
 function getStoryFile(storyPath: string, { requireFn = require } = {}): StoryFile | null {
     const unmockFn = mockLoaders({ except: storyPath });
+    const disableWarningsMessage = [
+        "There could be other story files.",
+        "Set 'TESTPLANE_STORYBOOK_DISABLE_STORY_REQUIRE_WARNING' environment variable to hide this warning",
+    ].join("\n");
 
     let storyFile;
 
@@ -102,21 +120,36 @@ function getStoryFile(storyPath: string, { requireFn = require } = {}): StoryFil
             loggedStoryFileRequireError = true;
 
             const warningMessage = [
-                `"testplane" section is ignored in storyfile "${storyPath}",`,
-                `because the file could not be read:\n${error}`,
-                "\nThere could be other story files.",
-                "\nSet 'TESTPLANE_STORYBOOK_DISABLE_STORY_REQUIRE_WARNING' environment variable to hide this warning",
+                `Testplane custom section is ignored in storyfile "${storyPath}",`,
+                `because the file could not be read:\n${error}\n${disableWarningsMessage}`,
             ].join(" ");
 
             console.warn(warningMessage);
         }
     }
 
-    const isStoryFileFailedToLoad = !storyFile || typeof storyFile === "function";
-
     unmockFn();
 
-    return isStoryFileFailedToLoad ? null : storyFile;
+    const isStoryFileFailedToLoad = !storyFile || isMockedModuleProxy(storyFile);
+
+    if (isStoryFileFailedToLoad) {
+        return null;
+    }
+
+    const ignoredProperties = getStoryFilMockedeNestedPropertiesPaths(storyFile);
+
+    if (ignoredProperties.length && !loggedStoryFileRequireError) {
+        loggedStoryFileRequireError = true;
+        const warningMessage = [
+            `Following Testplane custom properties are ignored in storyfile "${storyPath}":\n`,
+            ...ignoredProperties.map(property => `- ${property}\n`),
+            "Reason: Testplane couldn't handle imports in this file.\n",
+            disableWarningsMessage,
+        ].join("");
+        console.warn(warningMessage);
+    }
+
+    return storyFile;
 }
 
 function mockLoaders(opts: { except?: string }): () => void {
@@ -139,12 +172,87 @@ function mockModule(extension: string): () => void {
     };
 }
 
+function isMockedModuleProxy(obj: MockedModuleProxy): boolean {
+    return Boolean(obj && obj[MockedModuleProxySymbol] === true);
+}
+
+function getStoryFilMockedeNestedPropertiesPaths(storyFile: StoryFile): string[] {
+    const results = [] as string[];
+    const customProperties = ["testplane", "testplaneConfig"] as const;
+
+    for (const exportName in storyFile) {
+        if (isMockedModuleProxy(storyFile[exportName] as MockedModuleProxy)) {
+            results.push(exportName);
+        } else {
+            for (const customProperty of customProperties) {
+                const customMockedProperties = getNestedMockedPropertiesPaths(
+                    storyFile[exportName][customProperty],
+                    `${exportName}.${customProperty}`,
+                );
+
+                if (customMockedProperties) {
+                    results.push(...customMockedProperties);
+                }
+            }
+        }
+    }
+
+    return results;
+}
+
+function getNestedMockedPropertiesPaths(obj: unknown, parentProperty = ""): string[] | null {
+    if (!obj || (typeof obj !== "object" && typeof obj !== "function")) {
+        return null;
+    }
+
+    if (isMockedModuleProxy(obj)) {
+        return [parentProperty];
+    }
+
+    const results = [];
+
+    for (const property in obj) {
+        const nestedValue = obj[property as keyof typeof obj];
+        const nestedKey = parentProperty + "." + property;
+
+        const nestedResults = getNestedMockedPropertiesPaths(nestedValue, nestedKey);
+
+        if (nestedResults) {
+            results.push(...nestedResults);
+        }
+    }
+
+    return results.length ? results : null;
+}
+
+function removeNestedMockedPropertiesPaths<T = unknown>(obj: T): T {
+    if (isMockedModuleProxy(obj as MockedModuleProxy)) {
+        return {} as T;
+    }
+
+    if (!obj || typeof obj !== "object" || Array.isArray(obj)) {
+        return obj;
+    }
+
+    const result = {} as T;
+
+    for (const prop in obj) {
+        const property = prop as keyof typeof obj;
+
+        if (!isMockedModuleProxy(obj[property] as MockedModuleProxy)) {
+            result[property] = removeNestedMockedPropertiesPaths(obj[property]);
+        }
+    }
+
+    return result;
+}
+
 function mockFailedModule(extension: string, { except }: { except?: string }): () => void {
     const originalModule = Module._extensions[extension];
     const getMockedModuleProxy = (): any => // eslint-disable-line @typescript-eslint/no-explicit-any
         // eslint-disable-next-line @typescript-eslint/no-empty-function
         new Proxy(function () {}, {
-            get: getMockedModuleProxy,
+            get: (_, prop) => (prop === MockedModuleProxySymbol ? true : getMockedModuleProxy()),
             apply: getMockedModuleProxy,
             construct: getMockedModuleProxy,
             getOwnPropertyDescriptor: Reflect.getOwnPropertyDescriptor,
