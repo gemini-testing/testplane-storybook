@@ -18,9 +18,9 @@ describe("storybook/story-test-runner/extend-stories", () => {
         extendStoriesFromStoryFile(stories, { requireFn });
 
         const expectedMsg = [
-            '"testplane" section is ignored in storyfile "not/existing.ts", because the file could not be read:',
-            "Error: some error message ",
-            "There could be other story files. ",
+            'Testplane custom section is ignored in storyfile "not/existing.ts", because the file could not be read:',
+            "Error: some error message",
+            "There could be other story files.",
             "Set 'TESTPLANE_STORYBOOK_DISABLE_STORY_REQUIRE_WARNING' environment variable to hide this warning",
         ].join("\n");
         expect(console.warn).toBeCalledWith(expectedMsg);
