@@ -13,12 +13,15 @@ const withAbsolutePath = (story: StorybookRawStory): StorybookStoryExtended => (
     absolutePath: path.resolve(process.cwd(), story.importPath),
 });
 
-export const getStories = async (storybookUrl: string): Promise<StorybookStoryExtended[]> => {
+export const getStories = async (
+    storybookUrl: string,
+    waitStorybookJsonTimeout: number,
+): Promise<StorybookStoryExtended[]> => {
     const storybookJsonUrls = storybookDataJsonPaths.map(jsonPath =>
         getStorybookPathEndingWith(storybookUrl, jsonPath),
     );
 
-    const storiesJson = await waitStorybookDataJson(storybookJsonUrls);
+    const storiesJson = await waitStorybookDataJson(storybookJsonUrls, waitStorybookJsonTimeout);
 
     const stories = extractStories(storiesJson);
 

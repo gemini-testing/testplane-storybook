@@ -81,6 +81,7 @@ export interface PluginConfig {
     autoScreenshotStorybookGlobals: Record<string, Record<string, unknown>>;
     localport: number;
     remoteStorybookUrl: string;
+    waitStorybookJsonTimeout: number;
     browserIds: Array<string | RegExp>;
     unsafeAllowOtherTests: boolean;
 }
@@ -99,6 +100,7 @@ export function parseConfig(options: PluginPartialConfig): PluginConfig {
             autoScreenshotStorybookGlobals: optionalRecordOfRecordsOption("autoScreenshotStorybookGlobals", {}),
             localport: numberOption("localport", 6006),
             remoteStorybookUrl: stringOption("remoteStorybookUrl", ""),
+            waitStorybookJsonTimeout: numberOption("waitStorybookJsonTimeout", 30000),
             browserIds: stringAndRegExpArrayOption("browserIds", []),
             unsafeAllowOtherTests: booleanOption("unsafeAllowOtherTests", false),
         }),

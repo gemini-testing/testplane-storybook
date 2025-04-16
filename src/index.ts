@@ -76,7 +76,7 @@ function onTestplaneMaster(testplane: Testplane, config: PluginConfig): void {
         const storybookUrl = isLocal ? `http://127.0.0.1:${config.localport}` : config.remoteStorybookUrl;
         const iframeUrl = getStorybookPathEndingWith(storybookUrl, STORYBOOK_IFRAME_PATH);
 
-        const stories = await getStories(storybookUrl);
+        const stories = await getStories(storybookUrl, config.waitStorybookJsonTimeout);
 
         const storyTestFiles = await buildStoryTestFiles(stories, {
             autoScreenshots: config.autoScreenshots,
