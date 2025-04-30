@@ -1,13 +1,10 @@
-import {
-    STORYBOOK_WAIT_SERVER_TIMEOUT,
-    STORYBOOK_SERVER_REQUEST_TIMEOUT,
-    STORYBOOK_SERVER_CHECK_INTERVAL,
-} from "../../constants";
+import { STORYBOOK_SERVER_REQUEST_TIMEOUT, STORYBOOK_SERVER_CHECK_INTERVAL } from "../../constants";
 import logger from "../../logger";
 import type { StorybookDataJson } from "./extract-stories";
 
 export const waitStorybookDataJson = async (
     storybookJsonUrls: string[],
+    waitStorybookJsonTimeout: number,
     fetch = globalThis.fetch,
 ): Promise<StorybookDataJson> => {
     let isSuccess = false;
@@ -20,13 +17,14 @@ export const waitStorybookDataJson = async (
                 reject(
                     new Error(
                         [
-                            `Couldn't obtain stories JSON data in ${STORYBOOK_WAIT_SERVER_TIMEOUT}ms`,
+                            `Couldn't obtain stories JSON data in ${waitStorybookJsonTimeout}ms`,
                             'If you are using Storybook v6, please make sure you have set "features.buildStoriesJson" to "true" in your "./.storybook/main.js" file.',
+                            `If your storybook dev server can't start in ${waitStorybookJsonTimeout}ms, you can increase "waitStorybookJsonTimeout" value in the config`,
                         ].join("\n"),
                     ),
                 );
             }
-        }, STORYBOOK_WAIT_SERVER_TIMEOUT).unref();
+        }, waitStorybookJsonTimeout).unref();
     });
 
     const storybookReadyPromise = new Promise<StorybookDataJson>(resolve => {

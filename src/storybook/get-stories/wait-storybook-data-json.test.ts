@@ -4,10 +4,11 @@ import { waitStorybookDataJson } from "./wait-storybook-data-json";
 jest.mock("../../logger");
 
 jest.mock("../../constants", () => ({
-    STORYBOOK_WAIT_SERVER_TIMEOUT: 15,
     STORYBOOK_SERVER_REQUEST_TIMEOUT: 5,
     STORYBOOK_SERVER_CHECK_INTERVAL: 1,
 }));
+
+const STORYBOOK_WAIT_SERVER_TIMEOUT = 15;
 
 describe("storybook/get-stories/wait-storybook-data-json", () => {
     const textPromiseMock = jest.fn().mockResolvedValue(JSON.stringify({ foo: "bar" }));
@@ -23,7 +24,11 @@ describe("storybook/get-stories/wait-storybook-data-json", () => {
             return Promise.reject(fetchRejectMock);
         });
 
-        const result = await waitStorybookDataJson(["https://foo.com", "https://bar.com"], fetchMock);
+        const result = await waitStorybookDataJson(
+            ["https://foo.com", "https://bar.com"],
+            STORYBOOK_WAIT_SERVER_TIMEOUT,
+            fetchMock,
+        );
 
         expect(fetchMock).toHaveBeenCalledTimes(2);
         expect(result).toEqual({ foo: "bar" });
@@ -32,11 +37,12 @@ describe("storybook/get-stories/wait-storybook-data-json", () => {
     it("should reject if it exceeds the timeout", async () => {
         const fetchMock = jest.fn().mockReturnValue(new Promise(resolve => setTimeout(resolve, 16)));
         const errorMessage = [
-            "Couldn't obtain stories JSON data in 15ms",
+            `Couldn't obtain stories JSON data in ${STORYBOOK_WAIT_SERVER_TIMEOUT}ms`,
             'If you are using Storybook v6, please make sure you have set "features.buildStoriesJson" to "true" in your "./.storybook/main.js" file.',
+            `If your storybook dev server can't start in ${STORYBOOK_WAIT_SERVER_TIMEOUT}ms, you can increase "waitStorybookJsonTimeout" value in the config`,
         ].join("\n");
 
-        const result = waitStorybookDataJson(["https://foo.com"], fetchMock);
+        const result = waitStorybookDataJson(["https://foo.com"], STORYBOOK_WAIT_SERVER_TIMEOUT, fetchMock);
 
         await expect(result).rejects.toThrowError(errorMessage);
     });
@@ -44,7 +50,7 @@ describe("storybook/get-stories/wait-storybook-data-json", () => {
     it("should refetch, if fetch fails", async () => {
         const fetchMock = jest.fn().mockRejectedValueOnce(fetchRejectMock).mockResolvedValue(fetchResolveMock);
 
-        await waitStorybookDataJson(["https://foo.com"], fetchMock);
+        await waitStorybookDataJson(["https://foo.com"], STORYBOOK_WAIT_SERVER_TIMEOUT, fetchMock);
 
         expect(fetchMock).toHaveBeenCalledTimes(2);
     });
@@ -64,7 +70,7 @@ describe("storybook/get-stories/wait-storybook-data-json", () => {
             )
             .mockResolvedValue(fetchResolveMock);
 
-        await waitStorybookDataJson(["https://foo.com"], fetchMock);
+        await waitStorybookDataJson(["https://foo.com"], STORYBOOK_WAIT_SERVER_TIMEOUT, fetchMock);
 
         expect(onSignalAbortMock).toHaveBeenCalled();
         expect(fetchMock).toHaveBeenCalledTimes(2);
@@ -74,7 +80,7 @@ describe("storybook/get-stories/wait-storybook-data-json", () => {
         const fetchRejectMock = { cause: { code: "ECONNRESET" } };
         const fetchMock = jest.fn().mockRejectedValueOnce(fetchRejectMock).mockResolvedValue(fetchResolveMock);
 
-        await waitStorybookDataJson(["https://foo.com"], fetchMock);
+        await waitStorybookDataJson(["https://foo.com"], STORYBOOK_WAIT_SERVER_TIMEOUT, fetchMock);
 
         expect(logger.warn).toBeCalledWith("Fetching stories json failed:", "ECONNRESET");
     });
