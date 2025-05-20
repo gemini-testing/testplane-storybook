@@ -57,9 +57,20 @@ function openStoryScript(
             channel.off("storyMissing", onStoryMissing);
             channel.off("storyThrewException", onStoryThrewException);
             channel.off("storyErrored", onStoryErrored);
-            channel.off("globalsUpdated", onGlobalsUpdated);
 
             done(JSON.stringify(value));
+        }
+
+        function getStorybookDefaultGlobals(): Record<string, unknown> {
+            const savedGlobals = (window as StorybookWindow).__TESTPLANE_STORYBOOK_INITIAL_GLOBALS__;
+
+            if (savedGlobals) {
+                return savedGlobals;
+            }
+
+            const setGlobalCalls = (window as StorybookWindow).__STORYBOOK_ADDONS_CHANNEL__.data?.setGlobals;
+
+            return (setGlobalCalls && setGlobalCalls[0].globals) || {};
         }
 
         function onPlayFunctionThrewException(): void {
@@ -83,7 +94,23 @@ function openStoryScript(
                 }
             }
 
-            doneJson(result);
+            const storybookPreview = (window as StorybookWindow).__STORYBOOK_PREVIEW__;
+            const isStorybookPreviewAvailable = storybookPreview && storybookPreview.storeInitializationPromise;
+            const shouldUpdateStorybookGlobals = storybookGlobals && isStorybookPreviewAvailable;
+
+            if (shouldUpdateStorybookGlobals) {
+                (storybookPreview.storeInitializationPromise as Promise<void>).then(function () {
+                    const defaultGlobals = getStorybookDefaultGlobals();
+
+                    channel.once("globalsUpdated", function () {
+                        doneJson(result);
+                    });
+
+                    channel.emit("updateGlobals", { globals: Object.assign({}, defaultGlobals, storybookGlobals) });
+                });
+            } else {
+                doneJson(result);
+            }
         }
 
         function onStoryMissing(storyId: string): void {
@@ -117,48 +144,23 @@ function openStoryScript(
             doneJson(result);
         }
 
-        function onGlobalsUpdated(): void {
-            channel.once("playFunctionThrewException", onPlayFunctionThrewException);
-            channel.once("storyRendered", onStoryRendered);
-            channel.once("storyMissing", onStoryMissing);
-            channel.once("storyThrewException", onStoryThrewException);
-            channel.once("storyErrored", onStoryErrored);
-
-            if (shouldRemount) {
-                channel.emit("setCurrentStory", { storyId: "" });
-            }
-
-            channel.emit("setCurrentStory", { storyId });
-        }
-
         if (!channel) {
             result.loadError = "Couldn't find storybook channel. Looks like the opened page is not storybook preview";
 
             doneJson(result);
         }
 
-        const storybookPreview = (window as StorybookWindow).__STORYBOOK_PREVIEW__;
-        const isStorybookPreviewAvailable = storybookPreview && storybookPreview.storeInitializationPromise;
-        const shouldUpdateStorybookGlobals = storybookGlobals && isStorybookPreviewAvailable;
+        channel.once("playFunctionThrewException", onPlayFunctionThrewException);
+        channel.once("storyRendered", onStoryRendered);
+        channel.once("storyMissing", onStoryMissing);
+        channel.once("storyThrewException", onStoryThrewException);
+        channel.once("storyErrored", onStoryErrored);
 
-        if (shouldUpdateStorybookGlobals) {
-            (storybookPreview.storeInitializationPromise as Promise<void>).then(function () {
-                let defaultGlobals = (window as StorybookWindow).__TESTPLANE_STORYBOOK_INITIAL_GLOBALS__;
-
-                if (!defaultGlobals) {
-                    const setGlobalCalls = (window as StorybookWindow).__STORYBOOK_ADDONS_CHANNEL__.data?.setGlobals;
-                    const initValue = (setGlobalCalls && setGlobalCalls[0].globals) || {};
-
-                    defaultGlobals = (window as StorybookWindow).__TESTPLANE_STORYBOOK_INITIAL_GLOBALS__ = initValue;
-                }
-
-                channel.once("globalsUpdated", onGlobalsUpdated);
-
-                channel.emit("updateGlobals", { globals: Object.assign({}, defaultGlobals, storybookGlobals) });
-            });
-        } else {
-            onGlobalsUpdated();
+        if (shouldRemount) {
+            channel.emit("setCurrentStory", { storyId: "" });
         }
+
+        channel.emit("setCurrentStory", { storyId });
     });
 }
 
