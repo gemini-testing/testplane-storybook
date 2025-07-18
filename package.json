@@ -67,6 +67,6 @@
         "npm-which": "^3.0.1"
     },
     "peerDependencies": {
-        "storybook": "^6.4.0 || ^7.0.0 || ^8.0.0"
+        "storybook": ">=6.4.0"
     }
 }
