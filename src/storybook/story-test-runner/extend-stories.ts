@@ -252,19 +252,58 @@ function mockFailedModule(extension: string, { except }: { except?: string }): (
     const getMockedModuleProxy = (): any => // eslint-disable-line @typescript-eslint/no-explicit-any
         // eslint-disable-next-line @typescript-eslint/no-empty-function
         new Proxy(function () {}, {
-            get: (_, prop) => (prop === MockedModuleProxySymbol ? true : getMockedModuleProxy()),
+            get: (_, prop) => {
+                switch (prop) {
+                    // string conversion
+                    case "toString":
+                    case "valueOf":
+                    case Symbol.toPrimitive:
+                        return () => "[proxy Object]";
+                    case Symbol.toStringTag:
+                        return "Proxy";
+                    // iterators
+                    case Symbol.iterator:
+                        // eslint-disable-next-line @typescript-eslint/no-empty-function
+                        return function* () {};
+                    case Symbol.asyncIterator:
+                        // eslint-disable-next-line @typescript-eslint/no-empty-function
+                        return async function* () {};
+                    // string methods
+                    case Symbol.match:
+                        return false;
+                    case Symbol.matchAll:
+                        return () => null;
+                    case Symbol.search:
+                        return () => -1;
+                    case Symbol.split:
+                        return (str: unknown) => str;
+
+                    case Symbol.hasInstance:
+                        return () => false;
+
+                    case MockedModuleProxySymbol:
+                        return true;
+
+                    default:
+                        return getMockedModuleProxy();
+                }
+            },
+            // traps
             apply: getMockedModuleProxy,
             construct: getMockedModuleProxy,
-            getOwnPropertyDescriptor: Reflect.getOwnPropertyDescriptor,
-            getPrototypeOf: getMockedModuleProxy,
-            setPrototypeOf: getMockedModuleProxy,
-            set: (_, __, val) => val,
+            // inspection
+            getPrototypeOf: () => null,
+            has: () => false,
+            ownKeys: () => [],
+            getOwnPropertyDescriptor: () => void 0,
+            // extensibility checks
+            isExtensible: () => true,
+            preventExtensions: () => false,
+            // mutation
+            set: () => true,
             defineProperty: () => true,
             deleteProperty: () => true,
-            preventExtensions: () => true,
-            ownKeys: Reflect.ownKeys,
-            isExtensible: () => false,
-            has: () => false,
+            setPrototypeOf: () => true,
         });
 
     const applyMock = (filename: string): void => {
