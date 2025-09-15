@@ -152,14 +152,108 @@ function getStoryFile(storyPath: string, { requireFn = require } = {}): StoryFil
     return storyFile;
 }
 
+const getBlackholeProxy = (): any => // eslint-disable-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    new Proxy(function () {}, {
+        get: (_, prop) => {
+            switch (prop) {
+                // string conversion
+                case "toString":
+                case "valueOf":
+                case Symbol.toPrimitive:
+                    return () => "[proxy Object]";
+                case Symbol.toStringTag:
+                    return "Proxy";
+                // iterators
+                case Symbol.iterator:
+                    // eslint-disable-next-line @typescript-eslint/no-empty-function
+                    return function* () {};
+                case Symbol.asyncIterator:
+                    // eslint-disable-next-line @typescript-eslint/no-empty-function
+                    return async function* () {};
+                // string methods
+                case Symbol.match:
+                    return false;
+                case Symbol.matchAll:
+                    return () => null;
+                case Symbol.search:
+                    return () => -1;
+                case Symbol.split:
+                    return (str: unknown) => str;
+
+                case Symbol.hasInstance:
+                    return () => false;
+
+                case MockedModuleProxySymbol:
+                    return true;
+
+                default:
+                    return getBlackholeProxy();
+            }
+        },
+        // traps
+        apply: getBlackholeProxy,
+        construct: getBlackholeProxy,
+        // inspection
+        getPrototypeOf: () => null,
+        has: () => false,
+        ownKeys: () => ["prototype"],
+        getOwnPropertyDescriptor: (_, prop) => ({
+            configurable: prop !== "prototype",
+            enumerable: prop !== "prototype",
+            value: getBlackholeProxy(),
+            writable: true,
+        }),
+        // extensibility checks
+        isExtensible: () => true,
+        preventExtensions: () => false,
+        // mutation
+        set: () => true,
+        defineProperty: () => true,
+        deleteProperty: () => true,
+        setPrototypeOf: () => true,
+    });
+
 function mockLoaders(opts: { except?: string }): () => void {
+    const unmockWindow = mockWindow();
+    const unmockNotExistingModule = mockNotExistingModule();
     const unmockModuleCbs = [".css", ".scss", ".svg", ".png", ".ico", ".jpg", ".jpeg", ".gif", ".yml"].map(mockModule);
     const unmockFailedModuleCbs = [".js", ".ts", ".jsx", ".tsx", ".mjs", ".mts"].map(ext =>
         mockFailedModule(ext, opts),
     );
-    const unmockCb = (): void => unmockModuleCbs.concat(unmockFailedModuleCbs).forEach(unmock => unmock());
 
-    return unmockCb;
+    const unmockFns = [...unmockFailedModuleCbs, ...unmockModuleCbs, unmockNotExistingModule, unmockWindow];
+
+    return () => unmockFns.forEach(unmock => unmock());
+}
+
+function mockNotExistingModule(): () => void {
+    const originalLoad = Module._load;
+
+    Module._load = function (request: string, parent: unknown) {
+        try {
+            Module._resolveFilename(request, parent);
+        } catch (err) {
+            return getBlackholeProxy();
+        }
+
+        // eslint-disable-next-line prefer-rest-params
+        return originalLoad.apply(this, arguments);
+    };
+
+    return () => {
+        Module._load = originalLoad;
+    };
+}
+
+function mockWindow(): () => void {
+    const originalWindow = globalThis.window;
+
+    globalThis.window = getBlackholeProxy();
+
+    return () => {
+        globalThis.window = originalWindow;
+    };
 }
 
 function mockModule(extension: string): () => void {
@@ -249,66 +343,10 @@ function removeNestedMockedPropertiesPaths<T = unknown>(obj: T): T {
 
 function mockFailedModule(extension: string, { except }: { except?: string }): () => void {
     const originalModule = Module._extensions[extension];
-    const getMockedModuleProxy = (): any => // eslint-disable-line @typescript-eslint/no-explicit-any
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
-        new Proxy(function () {}, {
-            get: (_, prop) => {
-                switch (prop) {
-                    // string conversion
-                    case "toString":
-                    case "valueOf":
-                    case Symbol.toPrimitive:
-                        return () => "[proxy Object]";
-                    case Symbol.toStringTag:
-                        return "Proxy";
-                    // iterators
-                    case Symbol.iterator:
-                        // eslint-disable-next-line @typescript-eslint/no-empty-function
-                        return function* () {};
-                    case Symbol.asyncIterator:
-                        // eslint-disable-next-line @typescript-eslint/no-empty-function
-                        return async function* () {};
-                    // string methods
-                    case Symbol.match:
-                        return false;
-                    case Symbol.matchAll:
-                        return () => null;
-                    case Symbol.search:
-                        return () => -1;
-                    case Symbol.split:
-                        return (str: unknown) => str;
-
-                    case Symbol.hasInstance:
-                        return () => false;
-
-                    case MockedModuleProxySymbol:
-                        return true;
-
-                    default:
-                        return getMockedModuleProxy();
-                }
-            },
-            // traps
-            apply: getMockedModuleProxy,
-            construct: getMockedModuleProxy,
-            // inspection
-            getPrototypeOf: () => null,
-            has: () => false,
-            ownKeys: () => [],
-            getOwnPropertyDescriptor: () => void 0,
-            // extensibility checks
-            isExtensible: () => true,
-            preventExtensions: () => false,
-            // mutation
-            set: () => true,
-            defineProperty: () => true,
-            deleteProperty: () => true,
-            setPrototypeOf: () => true,
-        });
 
     const applyMock = (filename: string): void => {
         require.cache[filename].loaded = true;
-        require.cache[filename].exports = getMockedModuleProxy();
+        require.cache[filename].exports = getBlackholeProxy();
     };
 
     Module._extensions[extension] = (m: ImportingModule, filename: string) => {
