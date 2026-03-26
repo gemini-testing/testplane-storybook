@@ -6,6 +6,7 @@ import type { Test } from "testplane";
 import { writeStoryTestsFile, TestplaneOpts } from "./write-tests-file";
 import { STORYBOOK_TEST_DIRNAME } from "../../constants";
 import type { StorybookStoryExtended } from "../get-stories";
+import { encodeStoryPath, decodeStoryPath } from "./story-test-file-path";
 
 export type { TestplaneOpts };
 
@@ -31,11 +32,13 @@ export const getStoryFile = (test: Test): string => {
         );
     }
 
-    return path.relative(testsTmpDir, testFile).slice(0, -testplaneTestNameSuffix.length);
+    const relativeEncodedTestFilePath = path.relative(testsTmpDir, testFile).slice(0, -testplaneTestNameSuffix.length);
+
+    return decodeStoryPath(relativeEncodedTestFilePath);
 };
 
 const getStoryTestPath = (testsDir: string, story: StorybookStoryExtended): string =>
-    path.resolve(testsDir, story.importPath + testplaneTestNameSuffix);
+    path.resolve(testsDir, encodeStoryPath(story.importPath) + testplaneTestNameSuffix);
 
 export const buildStoryTestFiles = async (
     stories: StorybookStoryExtended[],
