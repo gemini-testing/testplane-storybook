@@ -94,23 +94,7 @@ function openStoryScript(
                 }
             }
 
-            const storybookPreview = (window as StorybookWindow).__STORYBOOK_PREVIEW__;
-            const isStorybookPreviewAvailable = storybookPreview && storybookPreview.storeInitializationPromise;
-            const shouldUpdateStorybookGlobals = storybookGlobals && isStorybookPreviewAvailable;
-
-            if (shouldUpdateStorybookGlobals) {
-                (storybookPreview.storeInitializationPromise as Promise<void>).then(function () {
-                    const defaultGlobals = getStorybookDefaultGlobals();
-
-                    channel.once("globalsUpdated", function () {
-                        doneJson(result);
-                    });
-
-                    channel.emit("updateGlobals", { globals: Object.assign({}, defaultGlobals, storybookGlobals) });
-                });
-            } else {
-                doneJson(result);
-            }
+            doneJson(result);
         }
 
         function onStoryMissing(storyId: string): void {
@@ -144,23 +128,41 @@ function openStoryScript(
             doneJson(result);
         }
 
+        function onGlobalsUpdated(): void {
+            channel.once("playFunctionThrewException", onPlayFunctionThrewException);
+            channel.once("storyRendered", onStoryRendered);
+            channel.once("storyMissing", onStoryMissing);
+            channel.once("storyThrewException", onStoryThrewException);
+            channel.once("storyErrored", onStoryErrored);
+
+            if (shouldRemount) {
+                channel.emit("setCurrentStory", { storyId: "" });
+            }
+
+            channel.emit("setCurrentStory", { storyId });
+        }
+
         if (!channel) {
             result.loadError = "Couldn't find storybook channel. Looks like the opened page is not storybook preview";
 
             doneJson(result);
         }
 
-        channel.once("playFunctionThrewException", onPlayFunctionThrewException);
-        channel.once("storyRendered", onStoryRendered);
-        channel.once("storyMissing", onStoryMissing);
-        channel.once("storyThrewException", onStoryThrewException);
-        channel.once("storyErrored", onStoryErrored);
+        const storybookPreview = (window as StorybookWindow).__STORYBOOK_PREVIEW__;
+        const isStorybookPreviewAvailable = storybookPreview && storybookPreview.storeInitializationPromise;
+        const shouldUpdateStorybookGlobals = storybookGlobals && isStorybookPreviewAvailable;
 
-        if (shouldRemount) {
-            channel.emit("setCurrentStory", { storyId: "" });
+        if (shouldUpdateStorybookGlobals) {
+            (storybookPreview.storeInitializationPromise as Promise<void>).then(function () {
+                const defaultGlobals = getStorybookDefaultGlobals();
+
+                channel.once("globalsUpdated", onGlobalsUpdated);
+
+                channel.emit("updateGlobals", { globals: Object.assign({}, defaultGlobals, storybookGlobals) });
+            });
+        } else {
+            onGlobalsUpdated();
         }
-
-        channel.emit("setCurrentStory", { storyId });
     });
 }
 
