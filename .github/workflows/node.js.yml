@@ -16,7 +16,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
+        node-version: [20.x, 24.x]
 
     steps:
     - uses: actions/checkout@v4
@@ -29,5 +29,5 @@ jobs:
     - run: npm test
     - run: npm run build
     - name: Publish
-      if: ${{ startsWith(matrix.node-version, '20') }}
+      if: ${{ startsWith(matrix.node-version, '24') }}
       run: npx pkg-pr-new publish

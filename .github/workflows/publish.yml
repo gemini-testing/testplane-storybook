@@ -1,0 +1,38 @@
+name: NPM publish
+on:
+  workflow_dispatch:
+    inputs:
+      versionType:
+        type: choice
+        description: Version Type
+        required: true
+        options:
+        - patch
+        - minor
+        - major
+permissions:
+  id-token: write
+  contents: write
+jobs:
+  publish:
+    name: Publishing to NPM
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          token: ${{ secrets.GH_ACCESS_TOKEN_V2 }}
+      - name: Setup Node JS
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      # Ensure npm 11.5.1 or later is installed
+      - name: Update npm
+        run: npm install -g npm@latest
+      - run: npm ci
+      - run: git config --global user.email "y-infra@yandex.ru"
+      - run: git config --global user.name "y-infra"
+      - run: npm run release -- --release-as ${{ github.event.inputs.versionType }}
+      - run: npm publish
+      - run: git push --follow-tags

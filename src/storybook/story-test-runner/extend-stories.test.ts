@@ -113,4 +113,30 @@ describe("storybook/story-test-runner/extend-stories", () => {
 
         expect(extendedStories).toMatchObject([{ name: "foo", skip: true }]);
     });
+
+    it("should match story by storyName when export key differs from story name", () => {
+        const storyExport = {
+            storyName: "My Custom Story",
+            testplaneConfig: { skip: true, browserIds: ["chrome"] },
+        };
+        const requireFn = mkRequireStub_().mockReturnValue({ default: {}, MyStoryExport: storyExport });
+        const stories = [{ name: "My Custom Story", absolutePath: "not/existing.js" }] as StorybookStory[];
+
+        const extendedStories = extendStoriesFromStoryFile(stories, { requireFn });
+
+        expect(extendedStories).toMatchObject([{ name: "My Custom Story", skip: true, browserIds: ["chrome"] }]);
+    });
+
+    it("should match story by name property when export key differs from story name", () => {
+        const storyExport = {
+            name: "My Custom Story",
+            testplaneConfig: { skip: true, browserIds: ["firefox"] },
+        };
+        const requireFn = mkRequireStub_().mockReturnValue({ default: {}, MyStoryExport: storyExport });
+        const stories = [{ name: "My Custom Story", absolutePath: "not/existing.js" }] as StorybookStory[];
+
+        const extendedStories = extendStoriesFromStoryFile(stories, { requireFn });
+
+        expect(extendedStories).toMatchObject([{ name: "My Custom Story", skip: true, browserIds: ["firefox"] }]);
+    });
 });

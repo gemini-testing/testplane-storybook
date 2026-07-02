@@ -45,7 +45,16 @@ export function extendStoriesFromStoryFile(
             continue;
         }
 
-        const storyMapKey = getStoryNameId(storyName);
+        let storyMapKey = getStoryNameId(storyName);
+
+        if (!storiesMap.has(storyMapKey)) {
+            const storyExport = storyFile[storyName] as { storyName?: string; name?: string };
+            const customName = storyExport?.storyName ?? storyExport?.name;
+
+            if (typeof customName === "string") {
+                storyMapKey = getStoryNameId(customName);
+            }
+        }
 
         if (!storiesMap.has(storyMapKey)) {
             continue;
