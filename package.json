@@ -9,6 +9,7 @@
         "preset.js"
     ],
     "scripts": {
+        "release": "standard-version",
         "build": "npm run clean && tsc",
         "build-spec": "tsc --build tsconfig.spec.json",
         "clean": "rimraf build/ build-spec/ *.tsbuildinfo",
@@ -42,6 +43,7 @@
     },
     "homepage": "https://github.com/gemini-testing/testplane-storybook#readme",
     "devDependencies": {
+        "standard-version": "9.5.0",
         "@gemini-testing/commander": "^2.15.3",
         "@types/fs-extra": "^11.0.4",
         "@types/jest": "^29.5.14",
