@@ -10,14 +10,12 @@ const trimUrlEnding = (urlObj: URL, ending: string): void => {
     }
 };
 
-const getFilteredBrowserIds = (config: Config, browserIds: Array<string | RegExp>): string[] => {
-    const allBrowserIds = config.getBrowserIds();
-
+export const getDefaultBrowserIds = (config: Config, browserIds: Array<string | RegExp>): string[] | null => {
     if (_.isEmpty(browserIds)) {
-        return allBrowserIds;
+        return null;
     }
 
-    return allBrowserIds.filter(browserId => {
+    return config.getBrowserIds().filter(browserId => {
         return browserIds.some(id => {
             if (_.isString(id)) {
                 return id === browserId;
@@ -46,13 +44,9 @@ export const patchSystemExtensions = (config: Config): void => {
 
 export const patchTestplaneSets = (
     config: Config,
-    {
-        browserIds,
-        files,
-        unsafeAllowOtherTests = false,
-    }: { browserIds: Array<string | RegExp>; files: string[]; unsafeAllowOtherTests?: boolean },
+    { files, unsafeAllowOtherTests = false }: { files: string[]; unsafeAllowOtherTests?: boolean },
 ): void => {
-    const browsers = getFilteredBrowserIds(config, browserIds);
+    const browsers = config.getBrowserIds();
     const autoStorybookSet = { browsers, files };
 
     if (unsafeAllowOtherTests) {
@@ -78,12 +72,10 @@ export const patchTestplaneBaseUrl = (config: Config, baseUrl: string): void => 
     });
 };
 
-export const disableTestplaneIsolation = (config: Config, browserIds: Array<string | RegExp>): void => {
-    const browsers = getFilteredBrowserIds(config, browserIds);
-
+export const disableTestplaneIsolation = (config: Config): void => {
     config.isolation = false;
 
-    browsers.forEach(browserId => {
+    config.getBrowserIds().forEach(browserId => {
         const browserConfig = config.forBrowser(browserId);
 
         browserConfig.isolation = false;

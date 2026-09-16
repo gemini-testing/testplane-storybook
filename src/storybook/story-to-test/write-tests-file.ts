@@ -7,6 +7,7 @@ export interface TestplaneOpts {
     autoScreenshots: boolean;
     autoscreenshotSelector: string;
     autoScreenshotStorybookGlobals: Record<string, Record<string, unknown>>;
+    browserIds: string[] | null;
 }
 
 interface TestFileContent {

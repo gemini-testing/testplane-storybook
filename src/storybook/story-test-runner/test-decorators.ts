@@ -17,10 +17,14 @@ export function extendedIt<T extends Partial<TestFunctionExtendedCtx>>(
     story: StorybookStoryExtended,
     testName: string,
     cb: TestFunction<T>,
+    defaultBrowserIds: string[] | null,
 ): void {
     const skipableIt = (story.skip ? it.skip : it) as typeof it;
+    const browserIds = story.browserIds ?? defaultBrowserIds;
 
-    story.browserIds && testplane.only.in(story.browserIds);
+    if (browserIds !== null) {
+        testplane.only.in(browserIds);
+    }
 
     skipableIt(testName, cb);
 }

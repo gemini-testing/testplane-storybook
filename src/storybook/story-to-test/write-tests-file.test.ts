@@ -19,6 +19,7 @@ describe("storybook/story-to-test/write-tests-file", () => {
             autoScreenshots: true,
             autoscreenshotSelector: ".foobar",
             autoScreenshotStorybookGlobals: { foo: { bar: "baz" } },
+            browserIds: ["chrome"],
         };
 
         const testFile = "/absolute/test/path/file.testplane.js";
