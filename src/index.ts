@@ -2,7 +2,7 @@ import type Testplane from "testplane";
 import type { ChildProcessWithoutNullStreams } from "child_process";
 import { parseConfig } from "./config";
 import { STORYBOOK_IFRAME_PATH } from "./constants";
-import { getStorybookPathEndingWith } from "./utils";
+import { getDefaultBrowserIds, getStorybookPathEndingWith } from "./utils";
 import { getStories } from "./storybook/get-stories";
 import { buildStoryTestFiles } from "./storybook/story-to-test";
 import { patchTestplaneBaseUrl, patchTestplaneSets, patchSystemExtensions, disableTestplaneIsolation } from "./utils";
@@ -82,13 +82,13 @@ function onTestplaneMaster(testplane: Testplane, config: PluginConfig): void {
             autoScreenshots: config.autoScreenshots,
             autoscreenshotSelector: config.autoscreenshotSelector,
             autoScreenshotStorybookGlobals: config.autoScreenshotStorybookGlobals,
+            browserIds: getDefaultBrowserIds(testplane.config, config.browserIds),
         });
 
         patchTestplaneBaseUrl(testplane.config, iframeUrl);
-        disableTestplaneIsolation(testplane.config, config.browserIds);
+        disableTestplaneIsolation(testplane.config);
         patchSystemExtensions(testplane.config);
         patchTestplaneSets(testplane.config, {
-            browserIds: config.browserIds,
             files: storyTestFiles,
             unsafeAllowOtherTests: config.unsafeAllowOtherTests,
         });

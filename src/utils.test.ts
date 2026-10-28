@@ -3,6 +3,7 @@ import _ from "lodash";
 import { STORYBOOK_KNOWN_PATH_ENDINGS, STORYBOOK_SET_NAME } from "./constants";
 import {
     getStorybookPathEndingWith,
+    getDefaultBrowserIds,
     patchTestplaneSets,
     disableTestplaneIsolation,
     patchTestplaneBaseUrl,
@@ -79,29 +80,34 @@ describe("utils", () => {
         });
     });
 
-    describe("patchTestplaneSets", () => {
-        it("should create a new set with the specified browsers and files", () => {
-            const config = getConfig_({
-                browsers: {
-                    chrome: {},
-                    firefox: {},
-                },
-                sets: {},
-            });
-            const browserIds = ["chrome"];
-            const files = ["file1", "file2"];
-
-            patchTestplaneSets(config, { browserIds, files });
-
-            expect(config.sets).toEqual({
-                [STORYBOOK_SET_NAME]: {
-                    browsers: ["chrome"],
-                    files: ["file1", "file2"],
-                },
-            });
+    describe("getDefaultBrowserIds", () => {
+        const config = getConfig_({
+            browsers: {
+                chrome: {},
+                firefox: {},
+                "firefox-mobile": {},
+            },
         });
 
-        it("should use all browsers from the config if no browserIds are specified", () => {
+        it("should not limit browsers for an empty plugin default", () => {
+            expect(getDefaultBrowserIds(config, [])).toBeNull();
+        });
+
+        it("should resolve string and regexp defaults against configured browsers", () => {
+            expect(getDefaultBrowserIds(config, ["chrome", /^firefox/])).toEqual([
+                "chrome",
+                "firefox",
+                "firefox-mobile",
+            ]);
+        });
+
+        it("should ignore defaults that are absent from Testplane configuration", () => {
+            expect(getDefaultBrowserIds(config, ["safari"])).toEqual([]);
+        });
+    });
+
+    describe("patchTestplaneSets", () => {
+        it("should create a new set with all configured browsers and specified files", () => {
             const config = getConfig_({
                 browsers: {
                     chrome: {},
@@ -111,7 +117,7 @@ describe("utils", () => {
             });
             const files = ["file1", "file2"];
 
-            patchTestplaneSets(config, { browserIds: [], files });
+            patchTestplaneSets(config, { files });
 
             expect(config.sets).toEqual({
                 [STORYBOOK_SET_NAME]: {
@@ -131,7 +137,7 @@ describe("utils", () => {
             });
             const files = ["file1", "file2"];
 
-            patchTestplaneSets(config, { browserIds: [], files });
+            patchTestplaneSets(config, { files });
 
             expect(config.sets).toEqual({
                 [STORYBOOK_SET_NAME]: {
@@ -151,7 +157,7 @@ describe("utils", () => {
             });
             const files = ["file1", "file2"];
 
-            patchTestplaneSets(config, { browserIds: [], files, unsafeAllowOtherTests: true });
+            patchTestplaneSets(config, { files, unsafeAllowOtherTests: true });
 
             expect(config.sets).toEqual({
                 [STORYBOOK_SET_NAME]: {
@@ -185,30 +191,14 @@ describe("utils", () => {
     });
 
     describe("disableTestplaneIsolation", () => {
-        it("should disable isolation for the specified browsers", () => {
+        it("should disable isolation for all configured browsers", () => {
             const config = getConfig_({
                 browsers: {
                     chrome: { isolation: true },
                     firefox: { isolation: true },
                 },
             });
-            const browserIds = ["chrome"];
-
-            disableTestplaneIsolation(config, browserIds);
-
-            expect(config.browsers.chrome.isolation).toBe(false);
-            expect(config.browsers.firefox.isolation).toBe(true);
-        });
-
-        it("should disable isolation for all browsers if no browserIds are specified", () => {
-            const config = getConfig_({
-                browsers: {
-                    chrome: { isolation: true },
-                    firefox: { isolation: true },
-                },
-            });
-
-            disableTestplaneIsolation(config, []);
+            disableTestplaneIsolation(config);
 
             expect(config.browsers.chrome.isolation).toBe(false);
             expect(config.browsers.firefox.isolation).toBe(false);

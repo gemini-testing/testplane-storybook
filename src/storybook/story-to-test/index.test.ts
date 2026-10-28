@@ -22,6 +22,7 @@ describe("storybook/story-to-test", () => {
                 autoScreenshots: true,
                 autoscreenshotSelector: "foobar",
                 autoScreenshotStorybookGlobals: {},
+                browserIds: ["chrome"],
             });
 
             expect(storyTestFiles).toEqual([
@@ -34,6 +35,7 @@ describe("storybook/story-to-test", () => {
                 autoScreenshots: true,
                 autoscreenshotSelector: "foobar",
                 autoScreenshotStorybookGlobals: {},
+                browserIds: ["chrome"],
             });
 
             expect(fs.emptyDir).toBeCalled();
@@ -47,6 +49,7 @@ describe("storybook/story-to-test", () => {
                 autoScreenshots: true,
                 autoscreenshotSelector: "foobar",
                 autoScreenshotStorybookGlobals: { foo: { bar: "baz" } },
+                browserIds: ["chrome"],
             };
 
             const storyTestFiles = await buildStoryTestFiles([storyFirst, storySecond], opts);
@@ -76,6 +79,7 @@ describe("storybook/story-to-test", () => {
                 autoScreenshots: true,
                 autoscreenshotSelector: "foobar",
                 autoScreenshotStorybookGlobals: {},
+                browserIds: ["chrome"],
             });
 
             expect(storyTestFiles).toEqual([
@@ -90,6 +94,7 @@ describe("storybook/story-to-test", () => {
                 autoScreenshots: true,
                 autoscreenshotSelector: "foobar",
                 autoScreenshotStorybookGlobals: {},
+                browserIds: ["chrome"],
             });
 
             expect(storyTestFiles).toEqual([

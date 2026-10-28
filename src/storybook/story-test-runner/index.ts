@@ -20,7 +20,7 @@ export function run(stories: StorybookStory[], opts: TestplaneOpts): void {
 
 function createTestplaneTests(
     story: StorybookStoryExtended,
-    { autoScreenshots, autoscreenshotSelector, autoScreenshotStorybookGlobals }: TestplaneOpts,
+    { autoScreenshots, autoscreenshotSelector, autoScreenshotStorybookGlobals, browserIds }: TestplaneOpts,
 ): void {
     nestedDescribe(story, () => {
         const rawAutoScreenshotGlobalSets = extractInheritedValue(
@@ -49,22 +49,28 @@ function createTestplaneTests(
 
                         await autoScreenshotStep(ctx.browser, selector);
                     },
+                    browserIds,
                 );
             }
         }
 
         if (story.extraTests) {
             for (const testName in story.extraTests) {
-                extendedIt(story, testName, async function (ctx: TestFunctionExtendedCtx) {
-                    ctx.expect = globalThis.expect;
+                extendedIt(
+                    story,
+                    testName,
+                    async function (ctx: TestFunctionExtendedCtx) {
+                        ctx.expect = globalThis.expect;
 
-                    await openStoryStep(ctx.browser, story);
+                        await openStoryStep(ctx.browser, story);
 
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    await story.extraTests![testName].call(ctx, ctx);
+                        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                        await story.extraTests![testName].call(ctx, ctx);
 
-                    await clearSessionStep(ctx.browser);
-                });
+                        await clearSessionStep(ctx.browser);
+                    },
+                    browserIds,
+                );
             }
         }
     });
