@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.7.9](https://github.com/gemini-testing/testplane-storybook/compare/v1.7.8...v1.7.9) (2026-11-10)
+
+
+### Bug Fixes
+
+* check rendered story id when handling events ([489090a](https://github.com/gemini-testing/testplane-storybook/commit/489090ab24dbfea8ecba27f4410c0e906bf1c843))
+
 ### [1.7.8](https://github.com/gemini-testing/testplane-storybook/compare/v1.7.7...v1.7.8) (2026-10-29)
 
 
