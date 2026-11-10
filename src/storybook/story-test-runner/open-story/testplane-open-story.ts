@@ -77,7 +77,11 @@ function openStoryScript(
             result.playFunctionError = "an unknown exception was thrown";
         }
 
-        function onStoryRendered(): void {
+        function onStoryRendered(renderedStoryId: string): void {
+            if (renderedStoryId !== storyId) {
+                return;
+            }
+
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             result.rootSelector = ["#storybook-root", "#root"].find(function (selector) {
                 return document.querySelector(selector);
@@ -130,7 +134,7 @@ function openStoryScript(
 
         function onGlobalsUpdated(): void {
             channel.once("playFunctionThrewException", onPlayFunctionThrewException);
-            channel.once("storyRendered", onStoryRendered);
+            channel.on("storyRendered", onStoryRendered);
             channel.once("storyMissing", onStoryMissing);
             channel.once("storyThrewException", onStoryThrewException);
             channel.once("storyErrored", onStoryErrored);
@@ -145,7 +149,8 @@ function openStoryScript(
         if (!channel) {
             result.loadError = "Couldn't find storybook channel. Looks like the opened page is not storybook preview";
 
-            doneJson(result);
+            done(JSON.stringify(result));
+            return;
         }
 
         const storybookPreview = (window as StorybookWindow).__STORYBOOK_PREVIEW__;
